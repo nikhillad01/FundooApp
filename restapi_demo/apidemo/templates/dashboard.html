@@ -1,0 +1,11 @@
+<center>
+ Welcome
+{% if messages %}
+<p class="messages">
+    {% for message in messages %}
+    <p style="color:green;" {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
+    {% endfor %}
+</p>
+{% endif %}
+<h3>{{ request.username }}</h3>
+</center>
