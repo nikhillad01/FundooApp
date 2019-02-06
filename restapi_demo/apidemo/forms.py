@@ -1,18 +1,7 @@
 from django import forms
 from django.contrib.auth import get_user_model
 
-from  .models import Registration
 User= get_user_model()
-class Registrationform(forms.ModelForm):
-    class Meta:
-        model= Registration
-        fields =[
-            'firstname',
-            'lastname',
-            'email',
-            'password',
-            'confirm_password',
-        ]
 
 class LoginForm(forms.ModelForm):
     model=User
@@ -25,8 +14,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 
 class SignupForm(UserCreationForm):     # inheriting user-creation form to create form with following fields
-    email = forms.EmailField(max_length=200, help_text='Required')
-
+    #email = forms.EmailField(max_length=200, help_text='Required')
+    email=forms.RegexField(regex=r'^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$',required=True)
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2')
@@ -51,3 +40,6 @@ class loginForm(AuthenticationForm):     # inheriting user-creation form to crea
         if commit:
             user.save()
         return user
+
+class ImageUploadForm(forms.Form):
+    image = forms.ImageField(label='Select a file')

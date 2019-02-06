@@ -4,6 +4,7 @@ from django.shortcuts import render
 from django.shortcuts import get_object_or_404
 from django.template.backends import django
 from django.urls import reverse
+from django.utils.datastructures import MultiValueDictKeyError
 from django.views.generic.base import View
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -19,11 +20,6 @@ from django.template.loader import render_to_string
 from .tokens import account_activation_token
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
-
-from .models import stock,Registration  # imports the models
-from .models import RestRegistration
-from .serializers import stockSerializer
-from .forms import Registrationform
 from django.contrib.auth import get_user_model, authenticate
 import jwt,json
 from rest_framework.response import Response
@@ -55,27 +51,7 @@ class UserCreateAPI(CreateAPIView):             # Registration using Rest framew
 
     serializer_class=registrationSerializer
     queryset = User.objects.all()                  # fields according to User   (adds data to USER model)
-    #queryset = RestRegistration.objects.all()   # # fields according to RestRegistration model.
-#     def post(self, request):
-#         email=request.data['email']
-#         match = re.match('^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$', email)
-#         try:
-#             if match == None:
-#                 #print('Bad Syntax')
-#                 # raise ValueError('Bad Syntax')
-#                 return Response('Please enter valid Email')
-#             else:obj.proceed()
-#                 return Response("Valid")
-#         except ValueError:
-#             print('Not Valid Email')
-#
-#     def proceed(self):
-#         serializer_class = registrationSerializer
-#         queryset = User.objects.all()
-#
-#         #registrationSerializer
-# obj=UserCreateAPI()
-from django.contrib.auth.hashers import PBKDF2PasswordHasher
+
 class LoginView(APIView):
     #hasher = PBKDF2PasswordHasher()
 
@@ -128,12 +104,6 @@ class LoginView(APIView):
 
 
 
-from django_filters import rest_framework as filters
-
-import requests
-from .forms import LoginForm
-
-
 
 
 def Signup(request):
@@ -144,10 +114,7 @@ def Signup(request):
             user.is_active = False      # user disabled
             user.save()                 # stores in database.
             message = render_to_string('acc_active_email.html', {
-                # render_to_string()  takes two arguments 1.page to load and render and 2. Context {}for loading
                 'user': user,
-                #http://127.0.0.1:8000
-                #'domain':current_site.domain,
                 'domain':'http://127.0.0.1:8000',
                 #'uid': urlsafe_base64_encode(force_bytes(user.pk)),
                 'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),  # coz django 2.0.0
@@ -175,21 +142,13 @@ def activate(request, uidb64, token):
     if user is not None and account_activation_token.check_token(user, token):
         user.is_active = True
         user.save()
-        # login(request, user)
-        # return redirect('home')
-        #return render(request, 'rest_login/')
         return HttpResponsePermanentRedirect(reverse('rest_login'))
-        #return render(request, 'login.html')
-        #return HttpResponse('Thank you for your email confirmation. Now you can login your account.')
-        # return render(request, 'login.html', {'form': form})
     else:
         return HttpResponse('Activation link is invalid!')
 
 def login_v(request):
     return render(request, 'login.html')
 
-import requests
-from .forms import loginForm
 
 from django.http import Http404
 def demo_user_login(request):
@@ -202,7 +161,7 @@ def demo_user_login(request):
             user = authenticate(username=username, password=password)
         except user.DoesNotExist:
             raise Http404("No Such Data found.")
-
+        login(request,user)
         try:
             if user:
                    if user.is_active:
@@ -234,3 +193,37 @@ def demo_user_login(request):
 
     else:
         return render(request, 'login.html', {})
+
+def open_upload_form(request):
+    return render(request,'fileupload.html',{})
+
+
+import boto3
+
+def upload_profile(request):
+    #return HttpResponse("uploaded successfully")
+    if request.method=='POST':
+        print()
+        #uname=request.POST.get['username']
+        print('******************** in Upload view*********************')
+        print()
+        s3 = boto3.client('s3')
+        try:
+            print('***************** boto 3 ***********************')
+            file = request.FILES['pic']
+            username=request.POST.get('username')
+            print('*******************',username)
+            print('******************** In FILESSSS*********************')
+            key=username+'.jpeg'
+            print('this is keyyyyyyyyyyyyyyyyyyyyyyyyyy',key)
+            #s3.upload_file(file,'fundoo','test1.jpeg')
+            s3.upload_fileobj(file, 'fundoo', Key=key)
+        except MultiValueDictKeyError:
+            messages.error(request, "Please select valid file")
+            return render(request, 'profile.html')
+            #return HttpResponse("Please select valid file")
+        return render(request,'dashboard.html')
+    else : return HttpResponse("GET Request")
+
+def profile_page(request):
+    return render(request,'profile.html',{})

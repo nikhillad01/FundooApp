@@ -4,7 +4,6 @@ from rest_framework import serializers
 from rest_framework.authentication import BaseAuthentication, get_authorization_header
 from rest_framework.validators import UniqueValidator
 
-from .models import stock,Registration
 from django.contrib.auth import get_user_model
 # serializers used to convert models into JSON .
 from django.contrib.contenttypes.models import ContentType
@@ -22,14 +21,6 @@ from rest_framework import  exceptions
 
 
 
-class stockSerializer(serializers.ModelSerializer):
-
-
-    class Meta:
-        model = stock            # using stock model
-        fields = '__all__'      # all fields from stock model
-        # or
-        #fields =('ticker','volume','open','close')# if we want only specific values from models
 
 import re
 class registrationSerializer(serializers.ModelSerializer):
