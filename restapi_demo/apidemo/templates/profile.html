@@ -1,17 +1,20 @@
 <link href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" id="bootstrap-css">
 <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
 <script src="//cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
-<!------ Include the above in your HEAD tag ---------->
+
 
 <div class="container emp-profile">
 
-    {% if messages %}
-<p class="messages">
-    {% for message in messages %}
-    <p style="color:red;" {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>
-    {% endfor %}
+{% if messages %}
+<!--<p class="messages">-->
+    <!--{% for message in messages %}-->
+    <!--<p style="color:green;" {% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</p>-->
+    <script>alert("{{ message }}")</script>
+    <!--{% endfor %}-->
 </p>
 {% endif %}
+
+    <a href="{% url 'logout' %}" class="btn btn-warning" role="button" style="float: right;">Logout</a>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="profile-img">

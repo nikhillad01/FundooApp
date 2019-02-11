@@ -1,3 +1,24 @@
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/css/bootstrap.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
+</head>
+{% block content %}
+{% for c in token %}
+<!--<h6>{{c}}</h6>-->
+{% endfor %}
+<!--<p>{{ token}}</p>-->
+
+{% endblock %}
+<script>
+localStorage.setItem('token', ("{{token}}"));
+
+</script>
+
+
+<a href="{% url 'logout' %}" class="btn btn-warning" role="button" style="float: right;">Logout</a>
 <center>
     <h2>Welcome</h2>
 <!--{% if messages %}-->
@@ -10,7 +31,8 @@
 <h3 style="color:green;">{{ user.username }}</h3>
 
 </center>
-<script>var username={{ user.username }}</script>
+<!--<script>var username={{ user.username }}</script>-->
+
 <title>Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
