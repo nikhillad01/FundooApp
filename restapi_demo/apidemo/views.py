@@ -46,7 +46,7 @@ def profile_page(request):
 
 def logout(request):
     auth.logout(request)
-    return render(request, 'index.html')
+    return render(request, 'login.html')
 
 def base(request):
     return render(request, 'in.html')
@@ -159,7 +159,7 @@ def demo_user_login(request):
             jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
             j = jwt_token['token']
             messages.success(request, username)
-            return render(request, 'dashboard.html', {'token': j})
+            return render(request, 'in.html', {'token': j})
 
         else:
             msg = "Your account was inactive."
@@ -198,7 +198,7 @@ from .forms import PhotoForm
 
 
 def photo_list(request):
-    photos = Photo.objects.all()
+    #photos = Photo.objects.all()
     if request.method == 'POST':
         form = PhotoForm(request.POST, request.FILES)
         if form.is_valid():
@@ -206,4 +206,4 @@ def photo_list(request):
             return redirect('photo_list')
     else:
         form = PhotoForm()
-        return render(request, 'photo_list.html', {'form': form, 'photos': photos})
+        return render(request, 'photo_list.html', {'form': form})

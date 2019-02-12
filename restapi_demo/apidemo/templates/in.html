@@ -5,24 +5,15 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>FundooNotes</title>
+    <title>Fundoo</title>
     <link rel="shortcut icon" href="{% static 'images/keep_48dp.png' %}" />
 
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-
-    <!-- Bootstrap core CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-
-
-
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+    </script>
     <script src="{% static 'JS/cropper.min.js' %}"></script>
 
     <link rel="stylesheet" type="text/css" href="{% static 'css/label.css' %}">
@@ -31,8 +22,18 @@
 
 
 </head>
-<body>
+<style>
+    .btn-group img { margin-right: 10px }
+.dropdown-toggle { padding-right: 50px }
+.dropdown-toggle .glyphicon { margin-left: 20px; margin-right: -40px }
+.dropdown-menu>li>a:hover { background: #f1f9fd } /* $search-blue */
+.dropdown-header { background: #7777772b; font-size: 14px; font-weight: 700; padding-top: 5px; padding-bottom: 5px; margin-top: 10px; margin-bottom: 5px }
+</style>
+<script>
+localStorage.setItem('token', ("{{token}}"));
 
+</script>
+<body>
 
 <div id="wrapper">
     <nav id="navigationbar" class="navbar navbar navbar-fixed-top" role="navigation">
@@ -52,7 +53,7 @@
 
                         <i class="fa fa-bars"></i>
                     </a>
-                    <a style="margin-left: -36px;color: #635f5f;font-size: 21px;" href="#">fundooNotes</a>
+                    <a style="margin-left: -36px;color: #635f5f;font-size: 21px;" href="#">Fundoo</a>
                     <button class="search-btn" aria-label="Search" role="button" id="searchicon">
                           <svg focusable="false" height="24px" viewBox="0 0 24 24" width="24px" xmlns="http://www.w3.org/2000/svg">
                               <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
@@ -62,20 +63,51 @@
 
                    </div>
 			</div>
-            <form class="navbar-form navbar-left">
+            <div class="navbar-form navbar-left">
                   <div class="form-group">
                           <input class="form-control input-lg" id="inputlg" type="text" type="search" placeholder="        Search" aria-label="Search">
 
                   </div>
-                  <button type="button" class="btn "><span class="glyphicon glyphicon-repeat"></span> </button>
+                
+                <button class="btn"><a href="{% url 'base' %}"  ><span class="glyphicon glyphicon-repeat"></span></a> </button>
                   <button type="button" class="btn "><span class="glyphicon glyphicon-th-large"></span> </button>
                   <button type="button" class="btn "><span class="glyphicon glyphicon-cog"></span> </button>
                   <button type="button" class="btn "style="margin-left: 24px;"><span class="glyphicon glyphicon-th"></span> </button>
                   <button type="button" class="btn "><span class="glyphicon glyphicon-bell"></span> </button>
-                   <span><img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg
-                    " alt="no pic to display" width="32" height="25"/></span>
 
-            </form>
+
+
+
+
+            </div>
+ <div class="btn-group" style='float: right;'>
+     <div class="align-button">
+    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+      <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" width="32" height="35">
+    </button>
+</div>
+         <ul class="dropdown-menu dropdown-menu-right">
+          <li class="dropdown-header">Basic Info</li>
+              <div class="card" style="width:240px">
+                <img class="card-img-top" src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" alt="Card image" width="60" height="65">
+                <div class="card-body">
+                    <b><h5 class="card-title">{{ user.username }}</h5></b>
+                  <p class="card-text">{{ user.email }}</p>
+                    <br><br>
+                 <p><a href="{% url 'profile_page' %}" class="btn btn-default">See Profile</a></p>
+
+                    <nobr></nobr></div>
+              </div>
+
+          </li>
+          <li class="dropdown-header"></li>
+          <li><br><br><br>
+              <a href="{% url 'logout' %}" class="btn btn-default">Logout</a>
+
+          </li>
+        </ul>
+  </div>
+
 
 			<div id="navbar" class="collapse navbar-collapse" style="background-color: white;">
 				<ul class="nav navbar-nav">
@@ -121,7 +153,7 @@
                                 <path d="M17.63 5.84C17.27 5.33 16.67 5 16 5L5 5.01C3.9 5.01 3 5.9 3 7v10c0 1.1.9 1.99 2 1.99L16 19c.67 0 1.27-.33 1.63-.84L22 12l-4.37-6.16zM16 17H5V7h11l3.55 5L16 17z"></path>
                             </svg>
                             <span class="label-span" id="new-label">
-                                <label style="margin-left: -32px;margin-top: -63px;">{{label.label_name}} </label></span>
+                                <label style="margin-left: -32px;margin-top: -63px;"> </label></span>
                         </a>
                     </li>
                       {% endfor %}
@@ -160,17 +192,17 @@
 
                         <div class="panel panel-danger">
                             <div class="panel-body">
-                                 <form method="post" action="#" >
+                                 <form method="post" action="{% url 'profile_page' %}" >
                                  {% csrf_token %}
                                      <div class="form-group">
                                          <div role="button" class="pin-note"><span id="pin" class="glyphicon glyphicon-pushpin"></span></div>
                                      </div>
                                      <div class="form-group">
-                                         <div id="menu"><input type="text" name="title" id="title" maxlength="150" autofocus="" class="textinput textInput form-control" placeholder="Title"></div>
+                                         <div id="menu"><input type="text" name="title" id="title" maxlength="150" autofocus="" class="textinput textInput form-control" placeholder="Title" required></div>
                                      </div>
                                      <div class="form-group">
                                          <div class="form-group shadow-textarea">
-                                             <textarea class="form-control z-depth-1" id="description"name="description" rows="3" placeholder="Take a note..."></textarea>
+                                             <textarea class="form-control z-depth-1" id="description"name="description" rows="3" placeholder="Take a note..." required></textarea>
                                          </div>
                                      </div>
 
@@ -328,10 +360,11 @@
         <div class="col-md-8">
             {% if messages %}
             {% for message in messages %}
-            <div class="alert alert-{{message.tags}}">
-                {{ message }}
-            </div>
+            <!--<div class="alert alert-{{message.tags}}">-->
+                <!---->
+            <!--</div>-->
 
+      </div>
             {% endfor %}
             {% endif %}
             {% block content %}
@@ -342,7 +375,9 @@
         {% block javascript %}
         {% endblock %}
     </div>
-    </main></div>
+    </main></div><br>
+<div class="neVct-Ne3sFf-Bz112c" align="right"></div><br>
+<div class="neVct-Ne3sFf-fmcmS" align="center"><b>Notes you add appear here</b></div>
 </body>
 </html>
 

@@ -1,7 +1,11 @@
 from django import forms
 from django.contrib.auth import get_user_model
+from django.shortcuts import render
+from requests import request
+
 from .models import Profile
 User= get_user_model()
+import PIL
 
 class LoginForm(forms.ModelForm):
     model=User
@@ -77,4 +81,10 @@ class PhotoForm(forms.ModelForm):
         resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
         resized_image.save(photo.file.path)
 
-        return photo
+        #print(photo,'')
+        print(image,'dsbfasfasf')
+        #image.show()
+        #resized_image.save()
+        return resized_image.show()
+
+        #return render(request,'photo_list.html',{resized_image})

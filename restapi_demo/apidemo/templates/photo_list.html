@@ -99,9 +99,11 @@
 
   <!-- CONTAINER TO DISPLAY THE CROPPED IMAGES -->
   <div class="row" style="margin-top: 20px">
+    {{resized_image}}
     {% for photo in photos %}
       <div class="col-sm-4 col-md-3">
-        <img src="{{ photos.file.url }}" class="thumbnail">
+        <img src="{{ photo.file.url }}" class="thumbnail">
+        {{ photo.file }}
 
       </div>
     {% endfor %}
