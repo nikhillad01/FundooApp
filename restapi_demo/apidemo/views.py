@@ -1,12 +1,10 @@
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
-from django.http import  HttpResponsePermanentRedirect
+from django.http import HttpResponsePermanentRedirect
 from django.urls import reverse
-from django.utils.datastructures import MultiValueDictKeyError
 from rest_framework.views import APIView
 from django.http import HttpResponse
-from django.shortcuts import render
 from django.contrib.auth import login
 from .forms import SignupForm
 from django.utils.encoding import force_bytes, force_text
@@ -16,16 +14,17 @@ from .tokens import account_activation_token
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
 from django.contrib.auth import get_user_model, authenticate
-import jwt,json
+import jwt
 from .serializers import TokenAuthentication
 from .serializers import registrationSerializer
 from rest_framework.generics import CreateAPIView
-import boto3
 from .Upload_profile_pic_S3 import profile_pic
-
+from .forms import PhotoForm
 from django.contrib.sites.models import Site
+from django.shortcuts import render, redirect
 
 current_site = Site.objects.get_current()
+print(current_site)
 # current_site.domain
 
 
@@ -70,13 +69,12 @@ class LoginView(APIView):
             username = request.POST.get('username')
             password = request.POST.get('password')
             user = authenticate(username=username, password=password)
-            print(user, 'this is userrrrrrr')
             if user:
                 if user.is_active:
-                    payload = {'username': username,
+                    payload = {'username': username,        # creates token using Payload.
                                 'password': password, }
                     jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256')}
-                    return HttpResponse(
+                    return HttpResponse(        # returns token as response with success status code.
                      jwt_token.values(),
                         status=200,
                         content_type="application/json"
@@ -117,8 +115,7 @@ def Signup(request):
 
     else:
         form = SignupForm()
-
-    return render(request, 'signup.html', {'form': form})
+    return render(request, 'signup.html', {'form': form})       # if  GET request
 
 
 
@@ -137,7 +134,7 @@ def activate(request, uidb64, token):
     else:
         return HttpResponse('Activation link is invalid!')
 
-def login_v(request):
+def login_v(request):               # renders to login page.
     return render(request, 'login.html')
 
 
@@ -147,10 +144,10 @@ def demo_user_login(request):
 
     """ This method is used to log in user """
 
-    username = request.POST.get('username')
-    password = request.POST.get('password')
+    username = request.POST.get('username')             # takes the username from request
+    password = request.POST.get('password')             # takes password from request .
     print(username, password)
-    user = authenticate(username=username, password=password)
+    user = authenticate(username=username, password=password)       # checks if username and password are available in DB.
     if user:
         if user.is_active:
             login(request, user)
@@ -159,12 +156,10 @@ def demo_user_login(request):
             jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
             j = jwt_token['token']
             messages.success(request, username)
-            return render(request, 'in.html', {'token': j})
-
+            return render(request, 'in.html', {'token': j})   # renders to page with context=token
         else:
             msg = "Your account was inactive."
             return HttpResponse(messages.error(request, msg))
-
     else:
         messages.error(request, 'Invalid login details')
         return render(request, 'login.html')
@@ -174,35 +169,26 @@ def open_upload_form(request):
     return render(request, 'fileupload.html', {})
 
 
-
 @require_POST
 @login_required
 def upload_profile(request):
-
     """ This method is used to upload a profile picture to S3 bucket """
-    profile_pic(request)
-    messages.success(request, "Profile Pic updated")
+
+    #profile_pic(request)                      # calls profile_pic upload method from S3 Upload file.
+    messages.success(request, "Profile Pic updated")    # returns success message
     return render(request, 'profile.html')
-
-
 
 def crop(request):
     return render(request,'photo_list.html')
 
 
-
-from django.shortcuts import render, redirect
-
-from .models import Photo
-from .forms import PhotoForm
-
-
 def photo_list(request):
     #photos = Photo.objects.all()
+
     if request.method == 'POST':
         form = PhotoForm(request.POST, request.FILES)
         if form.is_valid():
-            form.save()
+            form.save()  # Saves to Database.
             return redirect('photo_list')
     else:
         form = PhotoForm()

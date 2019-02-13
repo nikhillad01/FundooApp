@@ -3,8 +3,8 @@ import pytest
 pytestmark = pytest.mark.django_db
 class TestUrls:
     def test_index(self):
-        path=reverse('index')
-        assert resolve(path).view_name=='index'
+        path=reverse('base')
+        assert resolve(path).view_name=='base'
 
     def test_signup(self):
         path=reverse('signup')

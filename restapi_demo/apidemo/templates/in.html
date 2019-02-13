@@ -4,23 +4,16 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
     <title>Fundoo</title>
     <link rel="shortcut icon" href="{% static 'images/keep_48dp.png' %}" />
-
-
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-    </script>
-    <script src="{% static 'JS/cropper.min.js' %}"></script>
-
+    </script> <script src="{% static 'JS/cropper.min.js' %}"> </script>
     <link rel="stylesheet" type="text/css" href="{% static 'css/label.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/main.css' %}" />
     <script type="text/javascript" src="{% static 'JS/script.js' %}"></script>
-
-
 </head>
 <style>
     .btn-group img { margin-right: 10px }
@@ -31,7 +24,7 @@
 </style>
 <script>
 localStorage.setItem('token', ("{{token}}"));
-
+<!--stores token to clients( browsers local storage)-->
 </script>
 <body>
 
@@ -68,24 +61,19 @@ localStorage.setItem('token', ("{{token}}"));
                           <input class="form-control input-lg" id="inputlg" type="text" type="search" placeholder="        Search" aria-label="Search">
 
                   </div>
-                
-                <button class="btn"><a href="{% url 'base' %}"  ><span class="glyphicon glyphicon-repeat"></span></a> </button>
+                    <button type="button" class="btn "><span class="glyphicon glyphicon-repeat"></span> </button>
+                  <!--<button class="btn"><a href="#"  ><span class="glyphicon glyphicon-repeat"></span></a> </button>-->
                   <button type="button" class="btn "><span class="glyphicon glyphicon-th-large"></span> </button>
                   <button type="button" class="btn "><span class="glyphicon glyphicon-cog"></span> </button>
                   <button type="button" class="btn "style="margin-left: 24px;"><span class="glyphicon glyphicon-th"></span> </button>
                   <button type="button" class="btn "><span class="glyphicon glyphicon-bell"></span> </button>
 
-
-
-
-
             </div>
  <div class="btn-group" style='float: right;'>
-     <div class="align-button">
+
     <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
       <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" width="32" height="35">
     </button>
-</div>
          <ul class="dropdown-menu dropdown-menu-right">
           <li class="dropdown-header">Basic Info</li>
               <div class="card" style="width:240px">
@@ -94,7 +82,7 @@ localStorage.setItem('token', ("{{token}}"));
                     <b><h5 class="card-title">{{ user.username }}</h5></b>
                   <p class="card-text">{{ user.email }}</p>
                     <br><br>
-                 <p><a href="{% url 'profile_page' %}" class="btn btn-default">See Profile</a></p>
+                 <p><a href="{% url 'photo_list' %}" class="btn btn-default">See Profile</a></p>
 
                     <nobr></nobr></div>
               </div>
@@ -187,55 +175,47 @@ localStorage.setItem('token', ("{{token}}"));
             </ul>
         </nav>
     </div>
-
-
-
-                        <div class="panel panel-danger">
-                            <div class="panel-body">
-                                 <form method="post" action="{% url 'profile_page' %}" >
-                                 {% csrf_token %}
-                                     <div class="form-group">
-                                         <div role="button" class="pin-note"><span id="pin" class="glyphicon glyphicon-pushpin"></span></div>
-                                     </div>
-                                     <div class="form-group">
-                                         <div id="menu"><input type="text" name="title" id="title" maxlength="150" autofocus="" class="textinput textInput form-control" placeholder="Title" required></div>
-                                     </div>
-                                     <div class="form-group">
-                                         <div class="form-group shadow-textarea">
-                                             <textarea class="form-control z-depth-1" id="description"name="description" rows="3" placeholder="Take a note..." required></textarea>
-                                         </div>
-                                     </div>
-
-                                     <div class="button-footer">
-
-                                 <div  class="dropdown" >
-                                     <button class="btn btn-default dropdown-toggle" type="button" id="#remainderbutton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="remainder">
-                                         <path d="M13 9h-2v2H9v2h2v2h2v-2h2v-2h-2z"/>
-                                         <path d="M18 17v-6c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v6H4v2h16v-2h-2zm-2 0H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6zm-4 5c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/>
-                                     </svg>
-                                     </button>
-
-                                    <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
-                                         <label>Remainder</label>
-                                      <li><a href="#">Later today</a></li>
-                                      <li><a href="#">Tomorrow</a></li>
-                                      <li><a href="#">Next week</a></li>
-                                      <li><a href="#"><svg height="18px" width="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="#000000">
-                                       <path d="m23.99 4c-11.05 0-19.99 8.95-19.99 20s8.94 20 19.99 20c11.05 0 20.01-8.95 20.01-20s-8.96-20-20.01-20zm0.01 36c-8.84 0-16-7.16-16-16s7.16-16 16-16 16 7.16 16 16-7.16 16-16 16z"/>
-                                       <path d="m0 0h48v48h-48z" fill="none"/>
-                                       <path d="m25 14h-3v12l10.49 6.3 1.51-2.46-9-5.34z"/>
-                                      </svg>
-                                      Select date and time</a></li>
-                                     </ul>
-                                 </div>
-
-
-                                 <div role="button" class="btn " style="margin: -20px;margin-top: -100px;margin-left: 48px;" aria-label="Collaborator">
-                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="Collaborator">
-                                     <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
-                                     </svg>
-                                 </div>
+    <div class="panel panel-danger">
+         <div class="panel-body">
+             <form method="post" action="{% url 'profile_page' %}" >
+                  {% csrf_token %}
+                 <div class="form-group">
+                      <div role="button" class="pin-note"><span id="pin" class="glyphicon glyphicon-pushpin"></span></div>
+                           </div>
+    <div class="form-group">
+         <div id="menu"><input type="text" name="title" id="title" maxlength="150" autofocus="" class="textinput textInput form-control" placeholder="Title" required></div>
+    </div>
+    <div class="form-group">
+        <div class="form-group shadow-textarea">
+            <textarea class="form-control z-depth-1" id="description"name="description" rows="3" placeholder="Take a note..." required></textarea>
+         </div>
+    </div>
+    <div class="button-footer">
+         <div  class="dropdown" >
+             <button class="btn btn-default dropdown-toggle" type="button" id="#remainderbutton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;">
+             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="remainder">
+             <path d="M13 9h-2v2H9v2h2v2h2v-2h2v-2h-2z"/>
+             <path d="M18 17v-6c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v6H4v2h16v-2h-2zm-2 0H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6zm-4 5c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/>
+             </svg>
+            </button>
+ <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
+ <label>Remainder</label>
+ <li><a href="#">Later today</a></li>
+ <li><a href="#">Tomorrow</a></li>
+ <li><a href="#">Next week</a></li>
+ <li><a href="#"><svg height="18px" width="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="#000000">
+ <path d="m23.99 4c-11.05 0-19.99 8.95-19.99 20s8.94 20 19.99 20c11.05 0 20.01-8.95 20.01-20s-8.96-20-20.01-20zm0.01 36c-8.84 0-16-7.16-16-16s7.16-16 16-16 16 7.16 16 16-7.16 16-16 16z"/>
+ <path d="m0 0h48v48h-48z" fill="none"/>
+ <path d="m25 14h-3v12l10.49 6.3 1.51-2.46-9-5.34z"/>
+ </svg>
+ Select date and time</a></li>
+ </ul>
+ </div>
+<div role="button" class="btn " style="margin: -20px;margin-top: -100px;margin-left: 48px;" aria-label="Collaborator">
+   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="Collaborator">
+    <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
+   </svg>
+</div>
 
                                <div class="dropdown">
                                 <button class="btn btn-default dropdown-toggle" type="button" id="color-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -244,46 +224,10 @@ localStorage.setItem('token', ("{{token}}"));
                                        <circle cx="9.5" cy="7.5" r="1.5"/><circle cx="14.5" cy="7.5" r="1.5"/><circle cx="17.5" cy="11.5" r="1.5"/>
                                     </svg>
                                 </button>
-                                   <ul class="dropdown-menu" aria-labelledby="color-menu" style=" margin-left: 114px; margin-top: -22px;">
-                                     <div class="row1">
-                                        <input id="qqq" class="bgcolor" type="button" style="background-color:white" value="    " name="white" onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#D7BDE2" value="    " name="#D7BDE2" onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#A3E4D7" value="    " name="#A3E4D7" onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#AEB6BF  " value="    " name="#AEB6BF  " onclick="changeColor(this,{{note.id}})" />
-                                    </div>
-                                    <div class="row1">
-                                        <input class="bgcolor" type="button" style="background-color:#FAD7A0  " hover="background-color:#3e8e41" value="    " name="#FAD7A0  " onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#85C1E9  " value="    " name="#85C1E9  " onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#EDBB99" value="    " name="#EDBB99" onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#D2F5B4" value="    " name="#D2F5B4" onclick="changeColor(this,{{note.id}})" />
-                                    </div>
-                                    <div class="row3">
-                                        <input class="bgcolor" type="button" style="background-color:#CDE380  " value="    " name="#CDE380  " onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#E6A6AB  " value="    " name="#E6A6AB  " onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#B2B8E2  " value="    " name="#B2B8E2  " onclick="changeColor(this,{{note.id}})" />
-                                        <input class="bgcolor" type="button" style="background-color:#DCE391  " value="    " name="#DCE391  " onclick="changeColor(this,{{note.id}})" />
-                                    </div>
 
-                                 </ul>
                                 </div>
 
-                                <div role="button" class="btn " style="margin: -39px; margin-left: 149px;margin-top: -191px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="pic">
-                                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zm-5-7l-3 3.72L9 13l-3 4h12l-4-5z"/>
-                                    </svg>
-                                </div>
-                                <div role="button" class="btn " style="margin: -39px;margin-left: 35px;margin-top: -190px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="archive">
-                                    <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5l-4 4-4-4 1.41-1.41L11 13.67V10h2v3.67l1.59-1.59L16 13.5z"/>
-                                    </svg>
-                                </div>
-                                <div  id="note-button-6">
-                                    <div role="button" class="btn " style="margin: -26px;margin-left: 265px;margin-top: -213px;">
-                                        <svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" version="1.1" y="0px" x="0px" viewBox="0 0 18 18" enable-background="new 0 0 18 18"  height="18" width="25">
-                                          <path d="m9 5.5c1 0 1.8-0.8 1.8-1.8s-0.8-1.7-1.8-1.7-1.8 0.8-1.8 1.8 0.8 1.7 1.8 1.7zm0 1.7c-1 0-1.8 0.8-1.8 1.8s0.8 1.8 1.8 1.8 1.8-0.8 1.8-1.8-0.8-1.8-1.8-1.8zm0
-                                                 5.3c-1 0-1.8 0.8-1.8 1.8s0.8 1.7 1.8 1.7 1.8-0.8 1.8-1.8-0.8-1.7-1.8-1.7z"/>
-                                        </svg>
-                                    </div>
+
                                 </div>
                                   <ul class="dropdown-menu" id="note-button-6-actions" style="display:none">
                                       <li><a href="#">Change labels</a></li>
@@ -299,7 +243,7 @@ localStorage.setItem('token', ("{{token}}"));
                                  <div class="form-group">
                                  <button id="close" name="close" class="btn btn-outline-info" type="submit" style="  margin: -78px;margin-left: 505px;margin-top: -343px;" >Close</button>
                                   </div>
-                                     </div>
+
                               </form>
                             </div>
                     </div>
@@ -352,9 +296,7 @@ localStorage.setItem('token', ("{{token}}"));
      </div>
  </div>
  </div>
-
-
-
+</div>
     <main role="main" id="alert-msg" class="container">
     <div class="row">
         <div class="col-md-8">
@@ -363,15 +305,12 @@ localStorage.setItem('token', ("{{token}}"));
             <!--<div class="alert alert-{{message.tags}}">-->
                 <!---->
             <!--</div>-->
-
       </div>
             {% endfor %}
             {% endif %}
             {% block content %}
-
             {% endblock %}
         </div>
-
         {% block javascript %}
         {% endblock %}
     </div>

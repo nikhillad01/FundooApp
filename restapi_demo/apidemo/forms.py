@@ -1,11 +1,11 @@
-from django import forms
 from django.contrib.auth import get_user_model
-from django.shortcuts import render
 from requests import request
-
-from .models import Profile
+from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
+from PIL import Image
+from django import forms
+from .models import Photo
+from .Upload_profile_pic_S3 import profile_pic
 User= get_user_model()
-import PIL
 
 class LoginForm(forms.ModelForm):
     model=User
@@ -13,9 +13,6 @@ class LoginForm(forms.ModelForm):
         fields=['username','password',]
 
 
-from django import forms
-from django.contrib.auth.models import User
-from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 
 class SignupForm(UserCreationForm):     # inheriting user-creation form to create form with following fields
     #email = forms.EmailField(max_length=200, help_text='Required')
@@ -53,21 +50,21 @@ class ImageUploadForm(forms.Form):
 
 
 
-from PIL import Image
-from django import forms
-from django.core.files import File
-from .models import Photo
-
 class PhotoForm(forms.ModelForm):
+    username = forms.CharField(required=True)
     x = forms.FloatField(widget=forms.HiddenInput())
     y = forms.FloatField(widget=forms.HiddenInput())
     width = forms.FloatField(widget=forms.HiddenInput())
     height = forms.FloatField(widget=forms.HiddenInput())
 
+
+
     class Meta:
         model = Photo
         fields = ('file', 'x', 'y', 'width', 'height', )
 
+
+    """X coordinate, Y coordinate, height and width of the cropping box """
     def save(self):
         photo = super(PhotoForm, self).save()
 
@@ -75,16 +72,18 @@ class PhotoForm(forms.ModelForm):
         y = self.cleaned_data.get('y')
         w = self.cleaned_data.get('width')
         h = self.cleaned_data.get('height')
-
+        username = self.cleaned_data.get('username')
         image = Image.open(photo.file)
         cropped_image = image.crop((x, y, w+x, h+y))
         resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
         resized_image.save(photo.file.path)
-
+        #username=user.username
         #print(photo,'')
-        print(image,'dsbfasfasf')
         #image.show()
+        print('username thi ###########!!!!!!!!!!!!!@@@@@@@@@@@', username)
+        path=photo.file.path
+        profile_pic(request,path,username)
         #resized_image.save()
-        return resized_image.show()
+        return photo
 
         #return render(request,'photo_list.html',{resized_image})

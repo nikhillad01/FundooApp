@@ -1,3 +1,4 @@
+* demo shizzle only */
 body {
   background: #eee;
   max-width: 900px;
@@ -27,8 +28,8 @@ ul {
   color: #cbd5db;
 }
 
-.site-header .navbar-navigationbar .nav-link:hover {
-  color: green;
+.site-header .navbar-nav .nav-link:hover {
+  color: #ffffff;
 }
 
 .site-header .navbar-nav .nav-link.active {
@@ -64,18 +65,10 @@ ul {
     font: normal 16px Roboto,sans-serif;
     margin-top: 6px;
 }
-
 #btn2{
 
 margin-bottom: -76px;
 width: 201px;
-
-}
-
-.align-button{
-
-    width: 50px;
-    height: 50px;
 
 }
 #Reset-Password-btn{
@@ -1269,6 +1262,28 @@ background-color: transparent;
     margin-top: -437px;
 }
 
+/* label chips */
+/*.chip {
+  display: inline-block;
+  padding: 0 25px;
+  height: 50px;
+  font-size: 18px;
+  line-height: 50px;
+  border-radius: 25px;
+  background-color: #f1f1f1;
+}
+.closebtn {
+  padding-left: 10px;
+  color: #888;
+  font-weight: bold;
+  float: right;
+  font-size: 20px;
+  cursor: pointer;
+}
+.closebtn:hover {
+  color: #000;
+}*/
+
 .neVct-Ne3sFf-Bz112c {
     background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4KICA8cGF0aCBkPSJNOSAyMWMwIC41NS40NSAxIDEgMWg0Yy41NSAwIDEtLjQ1IDEtMXYtMUg5djF6bTMtMTlDOC4xNCAyIDUgNS4xNCA1IDljMCAyLjM4IDEuMTkgNC40NyAzIDUuNzRWMTdjMCAuNTUuNDUgMSAxIDFoNmMuNTUgMCAxLS40NSAxLTF2LTIuMjZjMS44MS0xLjI3IDMtMy4zNiAzLTUuNzQgMC0zLjg2LTMuMTQtNy03LTd6bTIuODUgMTEuMWwtLjg1LjZWMTZoLTR2LTIuM2wtLjg1LS42QTQuOTk3IDQuOTk3IDAgMCAxIDcgOWMwLTIuNzYgMi4yNC01IDUtNXM1IDIuMjQgNSA1YzAgMS42My0uOCAzLjE2LTIuMTUgNC4xeiIvPgo8L3N2Zz4K);
 
@@ -1295,6 +1310,9 @@ background-color: transparent;
     margin: 0 auto;
 
 }
+
+
+
 
 @heading-bg-color: #FFFFFF;
 @heading-text-color: #00000;
