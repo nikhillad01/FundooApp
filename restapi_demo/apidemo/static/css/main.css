@@ -1,39 +1,43 @@
-* demo shizzle only */
 body {
   background: #eee;
   max-width: 900px;
   margin: 30px auto;
+  font:Roboto;
 
-/*   outline: 1px solid #ccc; */
 }
 
-/* Still use global css (not utility css) for base typography etc? */
 p {
   margin-bottom: 0.8em;
+  font:Roboto;
 }
 h1, h2, h3, h4, h5, h6 {
   color: #444444;
-
+    font:Roboto;
 }
 
 ul {
   margin: 0;
+  font:Roboto;
 }
 
 .bg-steel {
   background-color: #5f788a;
+  font:Roboto;
 }
 
 .site-header .navbar-nav .nav-link {
   color: #cbd5db;
+  font:Roboto;
 }
 
 .site-header .navbar-nav .nav-link:hover {
-  color: #ffffff;
+  color: #ffedc4;
+  font:Roboto;
 }
 
 .site-header .navbar-nav .nav-link.active {
   font-weight: 500;
+  font:Roboto;
 }
 
 /*#navigationbar{
@@ -71,51 +75,8 @@ margin-bottom: -76px;
 width: 201px;
 
 }
-#Reset-Password-btn{
-  border: none;
-    width: 201px;
-    height: 44px;
-    color: #211d1d;
-    background-color: white;
-    background: #0e7f92;
-    font: normal 16px Roboto,sans-serif;
-    margin-top: 6px;
-}
 
-#update-btn{
- border: none;
-    width: 95px;
-    height: 44px;
-    color: #211d1d;
-    background-color: white;
-    background: #0e7f92;
-    font: normal 16px Roboto,sans-serif;
-    margin-top: 6px;
-}
-#resetbtn
-{
-    border: none;
-    width: 215px;
-    height: 44px;
-    color: #211d1d;
-    background-color: white;
-    background: #0e7f92;
-    font: normal 16px Roboto,sans-serif;
-    margin-top: -68px;
-    margin-bottom: -63px;
-    margin-right: -12px;
-}
 
-#registerbtn{
-    border: none;
-    width: 95px;
-    height: 44px;
-    color: #211d1d;
-    background-color: white;
-    background: #0e7f92;
-    font: normal 16px Roboto,sans-serif;
-    margin-top: 6px;
-}
 
 #alert-msg{
     margin-right: -177px;
@@ -679,7 +640,7 @@ a.article-title:hover {
     {
         width:430px !important;
      }
-/*for id*/
+
 
 #inputlg{
 
@@ -717,11 +678,6 @@ a.article-title:hover {
   transition: all 0.4s ease 0s;
   margin-top: 100px;
 }
-
-#note-wrapper{
-    transition: all 0.4s ease 0s;
-    margin-top: 100px;
-    }
 
 #sidebar-wrapper {
   margin-left: -250px;
@@ -786,12 +742,7 @@ a.article-title:hover {
   margin-left: -106px;
 }
 
-/*.sidebar-nav li a:hover,
-.sidebar-nav li.active {
-  color: #fff;
-  background: rgba(255,255,255,0.2);
-  text-decoration: none;
-}*/
+
 
 .sidebar-nav li a:active,
 .sidebar-nav li a:focus {
@@ -817,9 +768,7 @@ a.article-title:hover {
     margin-bottom: -25px;
 }
 
-/*.sidebar-nav > .sidebar-brand a:hover {
-  color: #fff;
-  background: none;}*/
+
 
 #fundoo-img{
 margin-top: -23px;
@@ -868,7 +817,6 @@ margin-top: 30px;
 margin-left: -20px;
 }
 
-/* crop image window*/
 
 .modal-footer{
     margin-left: 6.25rem;
@@ -901,10 +849,7 @@ margin-left: -20px;
    margin-top: -25px;
 }
 
-/*text fild (take a note)*/
-.shadow-textarea textarea.form-control::placeholder {
-    font-weight: 300;
-}
+
 
 #description{
     margin-top: -151px;
@@ -1004,9 +949,6 @@ h2 {
     }
 }
 
-/*--------------------------------------------------------------
-Header styles minus menu
---------------------------------------------------------------*/
 
 .masthead {
     background: #e74c3c;
@@ -1043,11 +985,6 @@ Header styles minus menu
     text-decoration: underline;
 }
 
-/* Card Based Layout - Base styles */
-/*body {
-  background: #ecf0f1;
-  line-height: 1.4;
-}*/
 
 .site-title {
 	color: white;
@@ -1124,9 +1061,9 @@ Header styles minus menu
     margin-bottom: 2em;
     display: flex;
     flex: 0 1 calc(33% - 0.5em);
-    /* width: calc(33% - 1em); */
+
   }
-} /* mq 60em*/
+}
 
 .btn-card {
     border: none;
@@ -1188,10 +1125,6 @@ background-color: transparent;
 }
 
 
-/*.card-action {
-    margin-top: 143px;
-    margin-left: -274px;
-}*/
 
 .card-action{
     margin-left:-46px;
@@ -1262,27 +1195,7 @@ background-color: transparent;
     margin-top: -437px;
 }
 
-/* label chips */
-/*.chip {
-  display: inline-block;
-  padding: 0 25px;
-  height: 50px;
-  font-size: 18px;
-  line-height: 50px;
-  border-radius: 25px;
-  background-color: #f1f1f1;
-}
-.closebtn {
-  padding-left: 10px;
-  color: #888;
-  font-weight: bold;
-  float: right;
-  font-size: 20px;
-  cursor: pointer;
-}
-.closebtn:hover {
-  color: #000;
-}*/
+
 
 .neVct-Ne3sFf-Bz112c {
     background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4KICA8cGF0aCBkPSJNOSAyMWMwIC41NS40NSAxIDEgMWg0Yy41NSAwIDEtLjQ1IDEtMXYtMUg5djF6bTMtMTlDOC4xNCAyIDUgNS4xNCA1IDljMCAyLjM4IDEuMTkgNC40NyAzIDUuNzRWMTdjMCAuNTUuNDUgMSAxIDFoNmMuNTUgMCAxLS40NSAxLTF2LTIuMjZjMS44MS0xLjI3IDMtMy4zNiAzLTUuNzQgMC0zLjg2LTMuMTQtNy03LTd6bTIuODUgMTEuMWwtLjg1LjZWMTZoLTR2LTIuM2wtLjg1LS42QTQuOTk3IDQuOTk3IDAgMCAxIDcgOWMwLTIuNzYgMi4yNC01IDUtNXM1IDIuMjQgNSA1YzAgMS42My0uOCAzLjE2LTIuMTUgNC4xeiIvPgo8L3N2Zz4K);
@@ -1311,7 +1224,34 @@ background-color: transparent;
 
 }
 
-
+.btn-circle {
+  width: 30px;
+  height: 30px;
+  text-align: center;
+  padding: 6px 0;
+  font-size: 12px;
+  line-height: 1.428571429;
+  border-radius: 15px;
+  border-color:black;
+}
+.btn-circle.btn-lg {
+  width: 50px;
+  height: 50px;
+  padding: 10px 16px;
+  font-size: 18px;
+  line-height: 1.33;
+  border-radius: 25px;
+   border-color:black;
+}
+.btn-circle.btn-xl {
+  width: 70px;
+  height: 70px;
+  padding: 10px 16px;
+  font-size: 24px;
+  line-height: 1.33;
+  border-radius: 35px;
+   border-color:black;
+}
 
 
 @heading-bg-color: #FFFFFF;

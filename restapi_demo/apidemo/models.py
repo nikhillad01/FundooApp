@@ -1,7 +1,7 @@
-from django.contrib.auth.models import User
 from django.db import models
+from django.core.validators import FileExtensionValidator
 
-class RestRegistration(models.Model):
+class RestRegistration(models.Model):       # Registration model for REST API.
     username=models.CharField(max_length=20)
     password = models.CharField(max_length=20)
     confirm_password = models.CharField(max_length=20,default='none')
@@ -13,15 +13,12 @@ class RestRegistration(models.Model):
 
 
     def check_uname(self):
-        # if len(self.username)<20:
-        #     return True
         return self.username
 
 
-from django.db import models
 
-class Photo(models.Model):
-    file = models.ImageField()
+class Photo(models.Model):              # Model For profile picture
+    file = models.ImageField(validators=[FileExtensionValidator(allowed_extensions=['jpeg'])])
     description = models.CharField(max_length=255, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
 
@@ -30,11 +27,3 @@ class Photo(models.Model):
         verbose_name_plural = 'photos'
 
 
-class Profile(models.Model):
-
-    user=models.OneToOneField(User, on_delete=models.CASCADE)
-    # create image field
-    image=models.ImageField(default='default.jpg', upload_to='profile_pics')
-
-    def __str__(self):
-        return f'{self.user.username} Profile'

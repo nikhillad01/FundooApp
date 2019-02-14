@@ -1,6 +1,22 @@
 {% extends 'b.html' %}
 
 {% block javascript %}
+<title>Fundoo Notes</title>
+<script type="text/javascript">
+    $("body").on("click", "#uploadbutton", function () {
+        var allowedFiles = [".jpeg",".png"];
+        var fileUpload = $("#fileUpload");
+        var lblError = $("#lblError");
+        var regex = new RegExp("([a-zA-Z0-9\s_\\.\-:])+(" + allowedFiles.join('|') + ")$");
+        if (!regex.test(fileUpload.val().toLowerCase())) {
+            lblError.html("Please upload files having extensions: <b>" + allowedFiles.join(', ') + "</b> only.");
+            return false;
+        }
+        lblError.html('');
+        return true;
+    });
+</script>
+
   <script>
     $(function () {
 
@@ -24,8 +40,8 @@
         $image.cropper({
           viewMode: 1,
           aspectRatio: 1/1,
-          minCropBoxWidth: 200,
-          minCropBoxHeight: 200,
+          minCropBoxWidth: 150,
+          minCropBoxHeight: 150,
           ready: function () {
             $image.cropper("setCanvasData", canvasData);
             $image.cropper("setCropBoxData", cropBoxData);
@@ -54,40 +70,34 @@
         $("#id_width").val(cropData["width"]);
         $("#formUpload").submit();
 
-        $.ajax({
-        type:"POST",
-        url: "http://127.0.0.1:8000/upload_profile/",
-        data : { request_data: cropData},
-        success : function(json) {
-            $("#request-access").hide();
-            console.log("requested access complete");
-        }
-    })
 
 
       });
 
     });
   </script>
-<script>var username ={{ user.username }}
-console.log(username);
-</script>
+
 {% endblock %}
 
 {% block content %}
-{{ user.username }}
+
 <a href="{% url 'base' %}" class="btn btn-default">Home</a></p><br>
  <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg
 " alt="no pic to display"/><br>
-  <h1 class="page-header">Album</h1>
+  <h1 class="page-header"></h1>
 
   <!-- FORM TO UPLOAD THE IMAGES -->
 <form method="post" enctype="multipart/form-data" id="formUpload">
     {% csrf_token %}
-    {{ form }}
+    <!--{{ form }}-->
+  {% for field in form %}
+
+<p>{{ field }}</p>
+{% endfor %}
 </form>
 
   <!-- MODAL TO CROP THE IMAGE -->
+
 <form enctype="multipart/form-data" action="{% url 'upload_profile' %}" method="post" >
 <div class="modal fade" id="modalCrop">
     <div class="modal-dialog">
@@ -111,23 +121,21 @@ console.log(username);
             </button>
           </div>
           <button type="button" class="btn btn-default" data-dismiss="modal">Nevermind</button>
-          <button type="button" class="btn btn-primary js-crop-and-upload">Crop and upload</button>
+          <button type="button" class="btn btn-primary js-crop-and-upload" id="uploadbutton">Crop and upload</button>
         </div>
       </div>
     </div>
   </div>
 </form>
 
-  <!-- CONTAINER TO DISPLAY THE CROPPED IMAGES -->
-  <div class="row" style="margin-top: 20px">
-    {{image}}
-    {% for photo in photos %}
-      <div class="col-sm-4 col-md-3">
-        <img src="{{ photo.file.url }}" class="thumbnail">
-        {{ photo.file }}
-
-      </div>
-    {% endfor %}
-  </div>
-
+<div class="col-md-6">
+  <label>User name</label>
+</div>
+<div class="col-md-5"><p>{{ user.username }}</p>
+</div>
+<div class="col-md-6">
+  <label>Email Id</label>
+</div>
+<div class="col-md-5"><p>{{ user.email }}</p>
+</div>
 {% endblock %}

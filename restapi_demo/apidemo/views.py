@@ -23,11 +23,6 @@ from .forms import PhotoForm
 from django.contrib.sites.models import Site
 from django.shortcuts import render, redirect
 
-current_site = Site.objects.get_current()
-print(current_site)
-# current_site.domain
-
-
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
 
@@ -172,6 +167,7 @@ def open_upload_form(request):
 @require_POST
 @login_required
 def upload_profile(request):
+
     """ This method is used to upload a profile picture to S3 bucket """
 
     #profile_pic(request)                      # calls profile_pic upload method from S3 Upload file.
@@ -183,13 +179,14 @@ def crop(request):
 
 
 def photo_list(request):
-    #photos = Photo.objects.all()
+
+    """This method is used to upload a profile picture with cropping functionality"""
 
     if request.method == 'POST':
-        form = PhotoForm(request.POST, request.FILES)
+        form = PhotoForm(request.POST, request.FILES)           # django form
         if form.is_valid():
-            form.save()  # Saves to Database.
+            form.save()  # Saves the form.
             return redirect('photo_list')
     else:
-        form = PhotoForm()
+        form = PhotoForm()                  # renders to page with form
         return render(request, 'photo_list.html', {'form': form})

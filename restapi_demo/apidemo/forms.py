@@ -29,8 +29,6 @@ class SignupForm(UserCreationForm):     # inheriting user-creation form to creat
         return user
 
 class loginForm(AuthenticationForm):     # inheriting user-creation form to create form with following fields
-    #username = forms.EmailField(max_length=200, help_text='Required')
-
     class Meta:
         model = User
         fields = ('username','password')
@@ -51,39 +49,43 @@ class ImageUploadForm(forms.Form):
 
 
 class PhotoForm(forms.ModelForm):
-    username = forms.CharField(required=True)
+    username = forms.CharField(required=True,label='Username',widget=forms.TextInput(attrs={'placeholder': 'Username '}))
     x = forms.FloatField(widget=forms.HiddenInput())
     y = forms.FloatField(widget=forms.HiddenInput())
     width = forms.FloatField(widget=forms.HiddenInput())
     height = forms.FloatField(widget=forms.HiddenInput())
-
-
 
     class Meta:
         model = Photo
         fields = ('file', 'x', 'y', 'width', 'height', )
 
 
-    """X coordinate, Y coordinate, height and width of the cropping box """
+    """ X coordinate, Y coordinate, height and width of the cropping box """
+
     def save(self):
+        username = self.cleaned_data.get('username')    # username to save image for particular user.
+
         photo = super(PhotoForm, self).save()
 
-        x = self.cleaned_data.get('x')
-        y = self.cleaned_data.get('y')
-        w = self.cleaned_data.get('width')
-        h = self.cleaned_data.get('height')
-        username = self.cleaned_data.get('username')
-        image = Image.open(photo.file)
-        cropped_image = image.crop((x, y, w+x, h+y))
-        resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)
+        x = self.cleaned_data.get('x')      # X coordinate
+        y = self.cleaned_data.get('y')      # X coordinate
+        w = self.cleaned_data.get('width')  # width of cropping box
+        h = self.cleaned_data.get('height')  # height of cropping box
+
+
+        image = Image.open(photo.file)              # opens image file using Pillow library
+        cropped_image = image.crop((x, y, w+x, h+y))        # crops image with x,y,w,h
+        resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)  # resize cropped image.
         resized_image.save(photo.file.path)
-        #username=user.username
-        #print(photo,'')
-        #image.show()
-        print('username thi ###########!!!!!!!!!!!!!@@@@@@@@@@@', username)
-        path=photo.file.path
-        profile_pic(request,path,username)
-        #resized_image.save()
+        path=photo.file.path                    # gets the image path.
+        profile_pic(request, path, username)      # calls method to upload pic to S3.
+
         return photo
 
-        #return render(request,'photo_list.html',{resized_image})
+    def clean_photo(self):
+        #image_file = self.cleaned_data.get('photo')
+        #super(PhotoForm, self)
+        image_file = super(PhotoForm, self)
+        if not image_file.name.endswith(".jpeg"):
+            raise forms.ValidationError("Only .jpeg image accepted")
+        return image_file

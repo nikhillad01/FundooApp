@@ -1,9 +1,9 @@
 from django.conf.global_settings import AUTH_USER_MODEL
 from django.test import TestCase
 import pytest
-# Create your tests here.
+
 #from restapi_demo.restapi_demo.settings import INSTALLED_APPS
-from restapi_demo.restapi_demo.settings import INSTALLED_APPS
+
 from .models import RestRegistration
 pytestmark = pytest.mark.django_db
 class TestRegisterModel:
