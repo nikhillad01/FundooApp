@@ -4,8 +4,8 @@ import pytest
 
 #from restapi_demo.restapi_demo.settings import INSTALLED_APPS
 
-from .models import RestRegistration
-pytestmark = pytest.mark.django_db
+from .models import RestRegistration        # Model
+pytestmark = pytest.mark.django_db          # permit to access database
 class TestRegisterModel:
     def test_save(self):
             register = RestRegistration.objects.create(

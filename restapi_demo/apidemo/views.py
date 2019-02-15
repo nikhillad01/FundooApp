@@ -3,9 +3,13 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.http import HttpResponsePermanentRedirect
 from django.urls import reverse
+from rest_framework.response import Response
+
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.contrib.auth import login
+
+from .models import Notes
 from .forms import SignupForm
 from django.utils.encoding import force_bytes, force_text
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
@@ -190,3 +194,82 @@ def photo_list(request):
     else:
         form = PhotoForm()                  # renders to page with form
         return render(request, 'photo_list.html', {'form': form})
+
+
+def demo(request):
+    return render(request,'demo.html',{})
+
+from .serializers import NoteSerializer
+from rest_framework import status, generics
+
+
+# API to create note
+
+class AddNote(APIView):
+    serializer_class=NoteSerializer
+    def post(self, request,  **kwargs):
+
+        serializer = NoteSerializer(data=request.data)
+        # check serialized data is valid or not
+        if serializer.is_valid():
+            # if valid then save it
+            serializer.save()
+            # in response return data in json format
+            #return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return render(request,'in.html',{})
+
+            # return HttpResponse('da')
+        # else return error msg in response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class deletenote(APIView):
+    def delete(self, request, pk):
+        # delete note of given id
+        note = Notes.objects.get(pk=pk)
+        # delete note
+        note.delete()
+        # return in response no content
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+class getnotes(generics.ListAPIView):
+    def get(self, request):
+        # get note filtered by id
+        #note_list = Notes.objects.filter(id=uid)
+        notelist = Notes.objects.all().order_by('-created_time')
+        # requested notes objects are serialized and store it in serializer variable
+        #serializer = NoteSerializer(notelist, many=True)
+       # data = {'Notes':notelist}
+        # return all data in json format
+        #return Response(serializer.data, status=status.HTTP_201_CREATED)
+       # print(data)
+        return render(request, 'in.html', {'notelist':notelist})
+
+
+
+def readallnotes(request):
+    allnotes = Notes.objects.all().order_by('-created_time')
+    #all_labels = Labels.objects.all().order_by('-created_time')
+    #map_labels = MapLabel.objects.all().order_by('-created_time')
+    print(allnotes)
+    # context = {  # 'title':title,
+    #     # 'description':description
+    #     'allnotes': allnotes}
+    # for i in range(len(map_labels)):
+    #     print('notename:-->', map_labels[i])
+    return render(request, 'notes/create-note.html', allnotes)
+
+class updatenote(APIView):
+    def put(self, request, pk, format=None):
+        # get all the notes of given requested id(pk)
+        note = Notes.objects.get(pk=pk)
+        # requested data is serialized and store it in serializer variable
+        serializer = NoteSerializer(note, data=request.data)
+        # check serialized data is valid or not
+        if serializer.is_valid():
+            # if valid then save it
+            serializer.save()
+            # in response return data in json format
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        # else return error msg in response
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

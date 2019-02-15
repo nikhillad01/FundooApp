@@ -192,7 +192,7 @@ localStorage.setItem('token', ("{{token}}"));
 
    <div class="panel panel-danger">
                             <div class="panel-body" style="font-family:Roboto;">
-                                 <form method="post" action="#" >
+                                 <form method="post" action="{% url 'addnote' %}" >
                                  {% csrf_token %}
                                      <div class="form-group">
                                          <div role="button" class="pin-note"><span id="pin" class="glyphicon glyphicon-pushpin"></span></div>
@@ -209,7 +209,7 @@ localStorage.setItem('token', ("{{token}}"));
                                      <div class="button-footer">
 
                                  <div  class="dropdown" >
-                                     <button class="btn btn-default dropdown-toggle" type="button" id="#remainderbutton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;">
+                                     <button class="btn btn-default dropdown-toggle" type="button" id="#" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="remainder">
                                          <path d="M13 9h-2v2H9v2h2v2h2v-2h2v-2h-2z"/>
                                          <path d="M18 17v-6c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v6H4v2h16v-2h-2zm-2 0H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6zm-4 5c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/>
@@ -218,9 +218,12 @@ localStorage.setItem('token', ("{{token}}"));
 
                                     <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
                                          <label>Remainder</label>
-                                      <li><a href="#">Later today</a></li>
-                                      <li><a href="#">Tomorrow</a></li>
-                                      <li><a href="#">Next week</a></li>
+                                      <select id="remainder">
+                                        <option value="Today">Today</option>
+                                          <option value="Tomorow">Tomorow</option>
+                                          <option value="Next Week">Next Week</option>
+                                          <option value="Next Month" selected>Next Month</option>
+                                        </select>
                                       <li><a href="#"><svg height="18px" width="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="#000000">
                                        <path d="m23.99 4c-11.05 0-19.99 8.95-19.99 20s8.94 20 19.99 20c11.05 0 20.01-8.95 20.01-20s-8.96-20-20.01-20zm0.01 36c-8.84 0-16-7.16-16-16s7.16-16 16-16 16 7.16 16 16-7.16 16-16 16z"/>
                                        <path d="m0 0h48v48h-48z" fill="none"/>
@@ -286,6 +289,12 @@ localStorage.setItem('token', ("{{token}}"));
    </div></div>
 
 <br></div>
+<center>
+{% for d in notelist %}
+    <h2>Title:</h2> <b>{{ d.title}}<br>
+    <h2>Description:</h2>{{ d.description }}</b>
+{% endfor %}
+</center><br>
        <center>
 <div class="neVct-Ne3sFf-Bz112c" align="center"></div><br>
 <div class="neVct-Ne3sFf-fmcmS" align="center" style="font-family:Roboto"><b>Notes you add appear here</b></div>

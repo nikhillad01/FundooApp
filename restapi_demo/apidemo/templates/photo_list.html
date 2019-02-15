@@ -4,7 +4,7 @@
 <title>Fundoo Notes</title>
 <script type="text/javascript">
     $("body").on("click", "#uploadbutton", function () {
-        var allowedFiles = [".jpeg",".png"];
+        var allowedFiles = [".jpeg"];
         var fileUpload = $("#fileUpload");
         var lblError = $("#lblError");
         var regex = new RegExp("([a-zA-Z0-9\s_\\.\-:])+(" + allowedFiles.join('|') + ")$");

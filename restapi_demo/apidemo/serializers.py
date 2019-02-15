@@ -102,3 +102,11 @@ class TokenAuthentication(BaseAuthentication, serializers.ModelSerializer):  # p
 class LoginDemoWithRest(serializers.ModelSerializer):
     username = serializers.CharField(max_length=20)
     password = serializers.CharField(style={'input_type': 'password'})
+
+from .models import Notes
+
+class NoteSerializer(serializers.ModelSerializer):
+
+	class Meta:
+		model = Notes
+		fields = ('title','description','is_archived','remainder')
