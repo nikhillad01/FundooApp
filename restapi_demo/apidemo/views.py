@@ -1,14 +1,15 @@
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
-from django.http import HttpResponsePermanentRedirect
+from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
+from rest_framework.decorators import permission_classes
+from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
-
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.contrib.auth import login
-
 from .models import Notes
 from .forms import SignupForm
 from django.utils.encoding import force_bytes, force_text
@@ -22,10 +23,12 @@ import jwt
 from .serializers import TokenAuthentication
 from .serializers import registrationSerializer
 from rest_framework.generics import CreateAPIView
-from .Upload_profile_pic_S3 import profile_pic
 from .forms import PhotoForm
-from django.contrib.sites.models import Site
 from django.shortcuts import render, redirect
+from django.core.cache import cache
+from django.core.paginator import Paginator
+from .serializers import NoteSerializer
+from rest_framework import status, generics
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -139,29 +142,52 @@ def login_v(request):               # renders to login page.
 
 
 @require_POST
+@permission_classes([AllowAny, ])
 def demo_user_login(request):
+
+    res = {
+        'message': 'Something bad happened',
+        'data': {},
+        'success': False
+    }
 
     """ This method is used to log in user """
 
-    username = request.POST.get('username')             # takes the username from request
-    password = request.POST.get('password')             # takes password from request .
-    print(username, password)
-    user = authenticate(username=username, password=password)       # checks if username and password are available in DB.
-    if user:
-        if user.is_active:
-            login(request, user)
-            payload = {'username': username,
-                       'password': password}
-            jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
-            j = jwt_token['token']
-            messages.success(request, username)
-            return render(request, 'in.html', {'token': j})   # renders to page with context=token
+    try:
+        username = request.POST.get('username')             # takes the username from request
+        password = request.POST.get('password')             # takes password from request .
+        if username is None:
+            raise Exception('Username is required')
+        if password is None:
+            raise Exception('Password is required')
+        print(username, password)
+        user = authenticate(username=username, password=password)       # checks if username and password are available in DB.
+        if user:
+            if user.is_active:
+                login(request, user)
+                payload = {'username': username,
+                           'password': password}
+                jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
+                j = jwt_token['token']
+                #messages.success(request, username)
+                res['message']="Logged in Successfully"
+                res['success']=True
+                cache.set('token', "token")
+                res['data'] =j
+                print(res)
+                return render(request, 'in.html', {'token':res})   # renders to page with context=token
+                #return HttpResponseRedirect(reverse('getnotes'),content={"token":res})
+            else:
+                res['message'] = "Your account was inactive."
+                return render(request, 'in.html', res)
+
         else:
-            msg = "Your account was inactive."
-            return HttpResponse(messages.error(request, msg))
-    else:
-        messages.error(request, 'Invalid login details')
-        return render(request, 'login.html')
+            res['message'] = 'Username or Password is not correct' #Invalid login details
+            messages.error(request, 'Invalid login details')
+            return render(request, 'login.html', context=res)
+    except Exception as e:
+        print(e)
+        return render(request, 'login.html', context=res)
 
 
 def open_upload_form(request):
@@ -199,77 +225,151 @@ def photo_list(request):
 def demo(request):
     return render(request,'demo.html',{})
 
-from .serializers import NoteSerializer
-from rest_framework import status, generics
+
 
 
 # API to create note
 
-class AddNote(APIView):
-    serializer_class=NoteSerializer
-    def post(self, request,  **kwargs):
+class AddNote(CreateAPIView):
 
-        serializer = NoteSerializer(data=request.data)
-        # check serialized data is valid or not
-        if serializer.is_valid():
-            # if valid then save it
-            serializer.save()
-            # in response return data in json format
-            #return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return render(request,'in.html',{})
+    serializer_class=NoteSerializer     # serializer to add note(specifies and validate )
 
-            # return HttpResponse('da')
-        # else return error msg in response
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        try:
+            #print(request.data)
+            #print(request.data['remainder'])
+
+            res = {
+                'message': 'Something bad happened',
+                'data': {},
+                'success': False
+            }
 
 
-class deletenote(APIView):
-    def delete(self, request, pk):
-        # delete note of given id
-        note = Notes.objects.get(pk=pk)
-        # delete note
-        note.delete()
-        # return in response no content
-        return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer = NoteSerializer(data=request.data)
+            # check serialized data is valid or not
+
+            if request.data['title'] and request.data['description'] is None:
+                raise Exception("Please add some information ")
+
+            if serializer.is_valid():
+                # if valid then save it
+                serializer.save()
+                # in response return data in json format
+                return HttpResponseRedirect(reverse('getnotes'),content=res)
+
+            # else return error msg in response
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            print(e)
+            return HttpResponseRedirect(reverse('getnotes'))
+
+
+
+# class deletenote(APIView):
+#     def delete(self, request, pk):
+#         # delete note of given id
+#         note = Notes.objects.get(pk=pk)
+#         note.delete()
+#         msg=messages.success(request,('Note has been deleted .'))
+#
+#         return HttpResponseRedirect(reverse('getnotes'))
+#
+
+
 
 class getnotes(generics.ListAPIView):
+
     def get(self, request):
-        # get note filtered by id
-        #note_list = Notes.objects.filter(id=uid)
-        notelist = Notes.objects.all().order_by('-created_time')
-        # requested notes objects are serialized and store it in serializer variable
-        #serializer = NoteSerializer(notelist, many=True)
-       # data = {'Notes':notelist}
-        # return all data in json format
-        #return Response(serializer.data, status=status.HTTP_201_CREATED)
-       # print(data)
-        return render(request, 'in.html', {'notelist':notelist})
+
+        """ This method is used to read all notes """
+
+        res = {
+            'message': 'Something bad happened',
+            'data': {},
+            'success': False
+        }
+        """This method is used to read all the notes from database."""
+        try:
+            note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
+
+        except Exception as e:
+            print(e)
+
+        paginator = Paginator(note_list, 9)          # Show 9 contacts per page
+        page = request.GET.get('page')
+        notelist = paginator.get_page(page)
+
+        res['message'] = "All Notes"
+        res['success'] = True
+        res['data'] =notelist
+
+        return render(request, 'in.html', {'notelist': notelist})
 
 
-
-def readallnotes(request):
-    allnotes = Notes.objects.all().order_by('-created_time')
-    #all_labels = Labels.objects.all().order_by('-created_time')
-    #map_labels = MapLabel.objects.all().order_by('-created_time')
-    print(allnotes)
-    # context = {  # 'title':title,
-    #     # 'description':description
-    #     'allnotes': allnotes}
-    # for i in range(len(map_labels)):
-    #     print('notename:-->', map_labels[i])
-    return render(request, 'notes/create-note.html', allnotes)
 
 class updatenote(APIView):
-    def put(self, request, pk, format=None):
-        # get all the notes of given requested id(pk)
-        note = Notes.objects.get(pk=pk)
-        # requested data is serialized and store it in serializer variable
-        serializer = NoteSerializer(note, data=request.data)
-        # check serialized data is valid or not
+    #serializer_class = NoteSerializer
+    def put(self, request, pk):
+
+        """This method is used to update the notes"""
+
+        res = {
+            'message': 'Something bad happened',    # response information
+            'data': {},
+            'success': False
+        }
+
+        if pk is None:                          # checks if primary key is passed
+            raise ValueError
+
+        if request.data is None:                # checks data is present in request
+            raise Exception('No data in request')
+
+        try:
+            note = Notes.objects.get(pk=pk)     # checks if primary key is available in DB and gets the data
+        except Exception as e:
+            print(e)
+            return JsonResponse(res)
+
+        serializer = NoteSerializer(note, data=request.data)  # check serialized data is valid or not
+
         if serializer.is_valid():
             # if valid then save it
             serializer.save()
             # in response return data in json format
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            res = {
+                'message': 'Updated Successfully',
+                'data': serializer.data,
+                'success': True
+            }
+            return Response(res, status=status.HTTP_201_CREATED)
         # else return error msg in response
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(res, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+def deleteN(request,id):
+
+    """This method is used to delete the note"""
+
+    res = {
+        'message': 'ID not found',  # response information
+        'data': {},
+        'success': False
+    }
+
+    if id is None:          # check is ID is not None
+        #raise Exception('ID not found')
+        return JsonResponse(res)
+    else:
+        try:
+            item = Notes.objects.get(pk=id)     # checks if note is present of specific id
+        except Exception as e:
+            print(e)
+            res['message']="Note not present for specific ID"
+            return JsonResponse(res)
+
+        item.delete()
+        return redirect(reverse('getnotes'))
+

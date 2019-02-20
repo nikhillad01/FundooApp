@@ -1,0 +1,8 @@
+{% include "baseT.html" %}
+{% load staticfiles %}
+{% block main %}
+<form action="{% url 'edit' %}" enctype="multipart/form-data" >
+    label<input type="text" value="{{ item.title }}">
+    description<input type="text" value="{{ item.description }}">
+    <button type="button" value="Edit">Edit</button>
+</form>

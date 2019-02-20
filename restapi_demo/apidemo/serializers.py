@@ -1,48 +1,29 @@
 from django.forms import forms
-from django.http import HttpResponse
 from rest_framework import serializers
-from rest_framework.authentication import BaseAuthentication, get_authorization_header
-from rest_framework.validators import UniqueValidator
-
 from django.contrib.auth import get_user_model
-# serializers used to convert models into JSON .
-from django.contrib.contenttypes.models import ContentType
-User= get_user_model()
-from rest_framework import status,exceptions
 from django.http import HttpResponse
 from rest_framework.authentication import get_authorization_header, BaseAuthentication
 from django.contrib.auth.models import User
 import jwt
-from .models import RestRegistration
-import json
-from rest_framework.serializers import (HyperlinkedIdentityField,ModelSerializer,SerializerMethodField,ValidationError)
-from django.contrib.auth import authenticate
 from rest_framework import  exceptions
+from .models import Notes
+User= get_user_model()
 
 
-
-
-import re
 class registrationSerializer(serializers.ModelSerializer):
                 # Creates an Serializer class with fields from model.
 
-    # model = Registration
-    # fields='__all__'              # takes all fields from Model.
 
     username=serializers.CharField(max_length=20)
     password=serializers.CharField(style={'input_type': 'password'})
-    #confirm_password=serializers.CharField(style={'input_type':'password'})
     email=serializers.RegexField(regex=r'^[_a-z0-9-]+(\.[_a-z0-9-]+)*@[a-z0-9-]+(\.[a-z0-9-]+)*(\.[a-z]{2,4})$',required=True)
 
     class Meta:       # inner class provides a metadata to ModelForm Class.
 
         model = User                    # Database Model to  store the data in .
-        #model=RestRegistration         # Stores data in  registration model.
-        #fields='__all__'               # fields used as queryset.
         fields=['username',
                 'password',
                 'email']
-
 
     def clean(self):
         cleaned_data = super(registrationSerializer, self).clean()
@@ -58,7 +39,7 @@ class registrationSerializer(serializers.ModelSerializer):
 class TokenAuthentication(BaseAuthentication, serializers.ModelSerializer):  # provides a way to crrate serializer class with fields in Model.
     username = serializers.CharField(max_length=20)
     password = serializers.CharField(style={'input_type': 'password'})
-   # confirm_password=serializers.CharField(style={'input_type': 'password'})
+
     class Meta:         # inner class provides a metadata to ModelForm Class.
         model = User            # sets Model as User Model.
         fields = ['username',
@@ -73,7 +54,6 @@ class TokenAuthentication(BaseAuthentication, serializers.ModelSerializer):  # p
             """This method is used if we pass our token to other app or method
             this will validated if user is valid or not by decoding the token"""
 
-            #model = self.get_model()
             payload = jwt.decode(token, "SECRET_KEY",algorithm='HS256')     # decodes the token
             username = payload['username']      # gets username from decoded token
             password = payload['password']      # gets password from decoded token
@@ -97,16 +77,16 @@ class TokenAuthentication(BaseAuthentication, serializers.ModelSerializer):  # p
             return (user, token)
 
         def authenticate_header(self, request,token):
-            return  token
+            return token
 
 class LoginDemoWithRest(serializers.ModelSerializer):
     username = serializers.CharField(max_length=20)
     password = serializers.CharField(style={'input_type': 'password'})
 
-from .models import Notes
+
 
 class NoteSerializer(serializers.ModelSerializer):
-
+    # Serializer for Notes
 	class Meta:
 		model = Notes
 		fields = ('title','description','is_archived','remainder')
