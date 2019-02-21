@@ -1,8 +1,41 @@
 {% include "baseT.html" %}
 {% load staticfiles %}
 {% block main %}
-<form action="{% url 'edit' %}" enctype="multipart/form-data" >
-    label<input type="text" value="{{ item.title }}">
-    description<input type="text" value="{{ item.description }}">
-    <button type="button" value="Edit">Edit</button>
+{{note.title}}
+{{note.description}}
+{{note.created_time}}
+{{note.remainder}}
+<div class="modal fade" id="myModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{{ i.title }}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+          Modal body..
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
 </form>
+{% endblock %}
+
+<script type="text/javascript">
+function reply_click(clicked_id)
+{
+    alert(clicked_id);
+}
+</script>

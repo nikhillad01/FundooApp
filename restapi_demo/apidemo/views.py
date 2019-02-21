@@ -1,5 +1,6 @@
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.views import View
 from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
@@ -239,46 +240,34 @@ class AddNote(CreateAPIView):
             #print(request.data)
             #print(request.data['remainder'])
 
-            res = {
+            res = {                                 # Response information .
                 'message': 'Something bad happened',
                 'data': {},
                 'success': False
             }
 
-
+            print('user--->',request.data['user'])
             serializer = NoteSerializer(data=request.data)
             # check serialized data is valid or not
 
-            if request.data['title'] and request.data['description'] is None:
+            if request.data['title'] and request.data['description'] is None:   # if title and description is not provided.
                 raise Exception("Please add some information ")
 
             if serializer.is_valid():
-                # if valid then save it
+                                            # if valid then save it
                 serializer.save()
-                # in response return data in json format
+                                            # in response return data in json format
                 return HttpResponseRedirect(reverse('getnotes'),content=res)
 
-            # else return error msg in response
+                                            # else return error msg in response
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
-            return HttpResponseRedirect(reverse('getnotes'))
+            return redirect(reverse('getnotes'))
 
 
 
-# class deletenote(APIView):
-#     def delete(self, request, pk):
-#         # delete note of given id
-#         note = Notes.objects.get(pk=pk)
-#         note.delete()
-#         msg=messages.success(request,('Note has been deleted .'))
-#
-#         return HttpResponseRedirect(reverse('getnotes'))
-#
-
-
-
-class getnotes(generics.ListAPIView):
+class getnotes(View):
 
     def get(self, request):
 
@@ -289,10 +278,12 @@ class getnotes(generics.ListAPIView):
             'data': {},
             'success': False
         }
-        """This method is used to read all the notes from database."""
-        try:
-            note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
 
+        """This method is used to read all the notes from database."""
+
+        try:
+            #note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
+            note_list = Notes.objects.filter(user=request.user).order_by('-created_time')   # shows note only added by specific user.
         except Exception as e:
             print(e)
 
@@ -359,8 +350,8 @@ def deleteN(request,id):
         'success': False
     }
 
-    if id is None:          # check is ID is not None
-        #raise Exception('ID not found')
+    if id is None:                              # check is ID is not None
+                                                #raise Exception('ID not found')
         return JsonResponse(res)
     else:
         try:
@@ -373,3 +364,7 @@ def deleteN(request,id):
         item.delete()
         return redirect(reverse('getnotes'))
 
+
+def updateform(request,pk):
+        note = Notes.objects.get(id=pk)
+        return render(request,'Notes/update.html',{"note":note})

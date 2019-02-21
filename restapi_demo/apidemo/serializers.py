@@ -87,6 +87,7 @@ class LoginDemoWithRest(serializers.ModelSerializer):
 
 class NoteSerializer(serializers.ModelSerializer):
     # Serializer for Notes
+
 	class Meta:
 		model = Notes
-		fields = ('title','description','is_archived','remainder')
+		fields = ('title','description','is_archived','remainder','user')

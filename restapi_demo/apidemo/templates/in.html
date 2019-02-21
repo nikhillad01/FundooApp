@@ -221,6 +221,9 @@ localStorage.setItem('token', ("{{token.data}}"));
                                              <textarea class="form-control z-depth-1" id="description"name="description" rows="3" placeholder="Take a note..." required></textarea>
                                          </div>
                                      </div>
+                                     <div class="form-group">
+                                        <input type="hidden" id="user" name="user" value={{user.id}}>
+                                     </div>
                                  <!--<div class="form-group">-->
                                      <!--<div class="button-footer">-->
                                              <!--<select id="remainder" name="remainder">-->
@@ -237,7 +240,8 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                                     <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
                                          <label>Remainder</label>
-                                      <select name="remainder">
+                                      <select name="remainder" >
+                                        <option value="" selected disabled hidden>Choose here</option>
                                         <option value="Today">Today</option>
                                           <option value="Tomorow">Tomorow</option>
                                           <option value="Next Week">Next Week</option>
@@ -313,20 +317,27 @@ localStorage.setItem('token', ("{{token.data}}"));
 
     {% for i in notelist %}
     {% if forloop.first %}<div class="card-columns">{% endif %}
-    <div class="card">
+    <div class="card" id="{{i.id}}" onClick="reply_click(this.id,cardtitle)">
         <div class="card-body">
-           <h5 class="card-title">{{ i.title}}</h5>
+           <h5 class="card-title" id="cardtitle">{{ i.title}}
+           </h5>
       <p class="card-text">{{ i.description }}</p>
             <a style="padding-left:35px;" href="{% url 'deleteN' i.id %}"  class="card-link">Delete</a>
             <a  href="{% url 'updatenote' i.id %}"  class="card-link">Update</a>
+             <a id="card" href="{% url 'updateform' i.id %}"  class="card-link">new</a>
         </div></div>
     {% if forloop.counter|divisibleby:3 %}</div><div class="row">{% endif %}
     {% if forloop.last %}</div>{% endif %}
+
+
+
+
+
 {% endfor %}
 </center><br>
 </div>
 </div>
-</div>
+
 {% if messages %}
     {% for message in messages %}<span>
         <div class="alert alert-warning alert-dismissable" role="alert">
@@ -339,12 +350,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 {% endif %}
 
 <center>
-    {% for note in notes %}
-    {# Each "contact" is a Contact model object. #}
-    {{ note.title|upper }}<br>
-    {{note.description}}
-    ...
-{% endfor %}
+
 <div class="pagination">
     <span class="step-links">
         {% if notelist.has_previous %}
@@ -372,6 +378,57 @@ localStorage.setItem('token', ("{{token.data}}"));
        </center>
 </div>
 
+
+
+
+<!--<MODAL FOR CARD>-->
+
+<div class="modal fade" id="myModal">
+    <div class="modal-dialog modal-sm">
+      <div class="modal-content">
+
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h4 class="modal-title">{{ i.title }}</h4>
+          <button type="button" class="close" data-dismiss="modal">&times;</button>
+        </div>
+
+        <!-- Modal body -->
+        <div class="modal-body">
+            <input type="text" id="modal-text"><br>
+            <input type="text" id="modal-textarea">
+          Modal body..
+        </div>
+
+        <!-- Modal footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+$(document).ready(function(){
+     $('.card').click(function(){
+        $('#myModal').modal('show');
+
+            $('#modal-text').val($('#textbox').text());
+
+            $('#modal-textarea').val($('#textarea').text());
+
+     });
+});
+</script>
+<script type="text/javascript">
+function reply_click(clicked_id)
+{
+    alert(clicked_id);
+}
+</script>
 </body>
 </html>
 
