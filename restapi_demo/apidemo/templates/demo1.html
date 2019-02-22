@@ -227,10 +227,6 @@ localStorage.setItem('token', ("{{token.data}}"));
                                      <div class="form-group">
                                         <input type="hidden" id="user" name="user" value={{user.id}}>
                                      </div>
-
-                                     <div class="form-group">
-                                        <input type="hidden" id="for_color" name="for_color" >
-                                     </div>
                                  <!--<div class="form-group">-->
                                      <!--<div class="button-footer">-->
                                              <!--<select id="remainder" name="remainder">-->
@@ -348,14 +344,14 @@ localStorage.setItem('token', ("{{token.data}}"));
 
     {% for i in notelist %}
     {% if forloop.first %}<div class="card-columns">{% endif %}
-    <article class="card" style="background-color:{{i.for_color}}">
+    <article class="card">
     <a href="#" data-toggle="modal" data-target="#myModal" id="page-button" style="background-color:{{i.color}};" >
             <figure class="thumbnail" style=" border: 0px solid #ddd;;padding: 0px;">
             </figure>
             <div class="card-content">
             <h2 id="textbox" >{{i.title }}</h2>
             <p id="textarea">{{i.description}}</p>
-            <a style="padding-left:100px;" href="{% url 'deleteN' i.id %}"  class="card-link">Delete</a>
+            <a style="padding-left:35px;" href="{% url 'deleteN' i.id %}"  class="card-link">Delete</a>
             <a  href="{% url 'updatenote' i.id %}"  class="card-link">Update</a>
              <a id="card" href="{% url 'updateform' i.id %}"  class="card-link">new</a>
             </div></a></article>
@@ -460,10 +456,7 @@ function changeColor(clicked_id)
 
     var color_id=clicked_id
     $('#add_note').css('background-color', clicked_id);
-
     console.log(color_id);
-
-     $('#for_color').val(clicked_id);
     <!--alert(clicked_id);-->
 }
 </script>

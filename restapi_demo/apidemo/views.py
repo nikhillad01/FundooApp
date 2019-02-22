@@ -247,6 +247,8 @@ class AddNote(CreateAPIView):
             }
 
             print('user--->',request.data['user'])
+            print(request.data)
+            print('for color',request.data['for_color'])
             serializer = NoteSerializer(data=request.data)
             # check serialized data is valid or not
 
@@ -299,10 +301,10 @@ class getnotes(View):
 
 
 
-class updatenote(APIView):
-    #serializer_class = NoteSerializer
+class updatenote(CreateAPIView):
+    serializer_class = NoteSerializer
     def put(self, request, pk):
-
+        serializer = NoteSerializer(data=request.data)
         """This method is used to update the notes"""
 
         res = {
@@ -323,7 +325,7 @@ class updatenote(APIView):
             print(e)
             return JsonResponse(res)
 
-        serializer = NoteSerializer(note, data=request.data)  # check serialized data is valid or not
+       # serializer = NoteSerializer(note, data=request.data)  # check serialized data is valid or not
 
         if serializer.is_valid():
             # if valid then save it
@@ -368,3 +370,21 @@ def deleteN(request,id):
 def updateform(request,pk):
         note = Notes.objects.get(id=pk)
         return render(request,'Notes/update.html',{"note":note})
+
+def updateNotes(request,pk):
+    note=Notes.objects.get(id=pk)
+    print(note)
+    title=request.POST.get('title')
+    description = request.POST.get('description')
+    ctime = request.POST.get('ctime')
+    remainder = request.POST.get('remainder')
+    colla = request.POST.get('colla')
+    print(title,colla,description)
+    note.title=title
+    note.description=description
+    note.created_time=ctime
+    note.remainder=remainder
+    note.collaborate=colla
+    note.save()
+    print(note)
+    return HttpResponse('up[dated')
