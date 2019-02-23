@@ -138,7 +138,16 @@ localStorage.setItem('token', ("{{token.data}}"));
         <div class="sep">
         <hr id="divider"><div class="sepText"></div>
         </div>
-
+{% if messages %}
+    {% for message in messages %}<span>
+        <div class="alert alert-success alert-dismissible" role="alert">
+            <button class="close" data-dismiss="alert">
+                <small><sup></sup></small>
+            </button>
+            {{ message }}
+        </div></span>
+    {% endfor %}
+{% endif %}
         <!-- Sidebar -->
 
      <div id="sidebar-wrapper" style="font-family:Arial;">
@@ -197,7 +206,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                     </li>
                     <li>
-                        <a href="#" style="margin-top: -22px;">
+                        <a href="{% url 'view_trash' %}" style="margin-top: -22px;">
                             <span class="glyphicon glyphicon-trash"></span>
                             <span class="fa fa-anchor solo"><b>Trash</b></span>
                         </a>
@@ -214,7 +223,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                                  <form method="post" action="{% url 'addnote' %}" >
                                  {% csrf_token %}
                                      <div class="form-group">
-                                         <div role="button" class="pin-note"><span id="pin" class="glyphicon glyphicon-pushpin"></span></div>
+                                           <div role="button" class="pin-note"><span id="pin" class="glyphicon glyphicon-pushpin"></span></div>
                                      </div>
                                      <div class="form-group">
                                          <div id="menu"><input type="text" name="title" id="title" maxlength="150" autofocus="" class="textinput textInput form-control" placeholder="Title" required></div>
@@ -343,45 +352,76 @@ localStorage.setItem('token', ("{{token.data}}"));
    </div>
 
 
-<a>
 
 
-    {% for i in notelist %}
-    {% if forloop.first %}<div class="card-columns">{% endif %}
-    <article class="card" style="background-color:{{i.for_color}}">
-    <a href="#" data-toggle="modal" data-target="#myModal" id="page-button" style="background-color:{{i.color}};" >
-            <figure class="thumbnail" style=" border: 0px solid #ddd;;padding: 0px;">
-            </figure>
-            <div class="card-content">
-            <h2 id="textbox" >{{i.title }}</h2>
-            <p id="textarea">{{i.description}}</p>
-            <a style="padding-left:100px;" href="{% url 'deleteN' i.id %}"  class="card-link">Delete</a>
-            <a  href="{% url 'updatenote' i.id %}"  class="card-link">Update</a>
-             <a id="card" href="{% url 'updateform' i.id %}"  class="card-link">new</a>
-            </div></a></article>
-    {% if forloop.counter|divisibleby:3 %}
-</div><div class="row">{% endif %}
-    {% if forloop.last %}</div>{% endif %}
+{% for i in notelist %}
+        {% if forloop.first %}<div class="card-columns">{% endif %}
+        <article class="card" style="background-color:{{i.for_color}}">
+        <a href="#" data-toggle="modal" data-target="#myModal" id="page-button" style="background-color:{{i.color}};" >
+                <figure class="thumbnail" style=" border: 0px solid #ddd;;padding: 0px;">
+                </figure>
+                <div class="card-content">
+                <h3 id="textbox" data-model-name="text_box" >{{i.title }}</h3>
+                    <!--<input type="text" id="abc" name="abc" value="abc">-->
+                <p id="textarea" data-model-name="text_area">{{i.description}}</p>
+                <a href="{% url 'pin_unpin' i.id %}" style="position: absolute;top: 8px;right: -250px;" class="card-link"><span class="glyphicon glyphicon-pushpin"></span></a>
+                <a style="padding-left:px;" href="{% url 'deleteN' i.id %}"  class="card-link">Delete</a>
+                <a  href="{% url 'updatenote' i.id %}"  class="card-link">Update</a>
+                 <a id="carad" href="{% url 'updateform' i.id %}"  class="card-link">new</a>
+
+                  <div class="dropdown show">
+  <a class="btn  dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="padding-left:50px;">
+    Dropdown link
+  </a>
+
+  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+    <a class="dropdown-item" href="{% url 'delete_forever' i.id %}">Delete Forever</a>
+    <!--<a class="dropdown-item" href="#">Another action</a>-->
+    <!--<a class="dropdown-item" href="#">Something else here</a>-->
+  </div>
+</div>
+                    <!--ok-->
 
 
-
-
+                </div></a></article>
+        {% if forloop.counter|divisibleby:3 %}
+    </div><div class="row">{% endif %}
+        {% if forloop.last %}</div>{% endif %}
 
 {% endfor %}
+
+
+<!--{% for i in notelist %}-->
+    <!--&lt;!&ndash;{% if not i.trash %}&ndash;&gt;-->
+
+        <!--{% if forloop.first %}<div class="card-columns">{% endif %}-->
+        <!--<article class="card" style="background-color:{{i.for_color}}">-->
+        <!--<a href="#" data-toggle="modal" data-target="#myModal" id="page-button" style="background-color:{{i.color}};" >-->
+                <!--<figure class="thumbnail" style=" border: 0px solid #ddd;;padding: 0px;">-->
+                <!--</figure>-->
+                <!--<div class="card-content">-->
+                <!--<h3 id="text_box" data-model-name="text_box" >{{i.title }}</h3>-->
+                    <!--&lt;!&ndash;<input type="text" id="abc" name="abc" value="abc">&ndash;&gt;-->
+                <!--<p id="text_area" data-model-name="text_area">{{i.description}}</p>-->
+                <!--<a href="{% url 'pin_unpin' i.id %}" style="position: absolute;top: 8px;right: -250px;" class="card-link"><span class="glyphicon glyphicon-pushpin"></span></a>-->
+                <!--<a style="padding-left:px;" href="{% url 'deleteN' i.id %}"  class="card-link">Delete</a>-->
+                <!--<a  href="{% url 'updatenote' i.id %}"  class="card-link">Update</a>-->
+                 <!--<a id="card" href="{% url 'updateform' i.id %}"  class="card-link">new</a>-->
+                <!--</div></a></article>-->
+        <!--{% if forloop.counter|divisibleby:3 %}-->
+    <!--</div><div class="row">{% endif %}-->
+        <!--{% if forloop.last %}</div>{% endif %}-->
+
+
+    <!--&lt;!&ndash;{% endif %}&ndash;&gt;-->
+
+
+<!--{% endfor %}-->
 </center><br>
 </div>
 </div>
 
-{% if messages %}
-    {% for message in messages %}<span>
-        <div class="alert alert-warning alert-dismissable" role="alert">
-            <button class="close" data-dismiss="alert">
-                <small><sup></sup></small>
-            </button>
-            {{ message }}
-        </div></span>
-    {% endfor %}
-{% endif %}
+
 
 <center>
 
@@ -418,7 +458,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 <!--<MODAL FOR CARD>-->
 
 <div class="modal fade" id="myModal">
-    <div class="modal-dialog modal-sm">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
 
         <!-- Modal Header -->
@@ -428,8 +468,8 @@ localStorage.setItem('token', ("{{token.data}}"));
 
         <!-- Modal body -->
         <div class="modal-body">
-            <input type="text" id="modal-text"><br>
-            <input type="text" id="modal-textarea">
+            <input type="text" id="modal-text" placeholder="1st"><br>
+            <input type="text" id="modal-textarea" placeholder="2nd"><br>
           Modal body..
         </div>
 
@@ -447,19 +487,34 @@ localStorage.setItem('token', ("{{token.data}}"));
 <script>
 $(document).ready(function(){
      $('.page-button').click(function(){
-        $('#myModal').modal('show');
+     $('#myModal').modal('show');
+     <!--$('#modal-text').val($('#text_box').text());-->
+     var f = $('.text_box').val()
 
-            $('#modal-text').val($('#textbox').text());
-            $('#modal-textarea').val($('#textarea').text());
+     console.log(f);
+     console.log("adasddadasdasad");
+     $('#modal-textarea').val($('#text_area').text());
      });
 });
 </script>
+<script type="text/javascript">
+
+var fa= $('.text_box').val();
+console.log(fa);
+console.log("adkhadu");
+
+
+</script>
+
+
 <script type="text/javascript">
 function changeColor(clicked_id)
 {
 
     var color_id=clicked_id
     $('#add_note').css('background-color', clicked_id);
+    $('#title').css('background-color', clicked_id);
+    $('#description').css('background-color', clicked_id);
 
     console.log(color_id);
 
@@ -467,29 +522,8 @@ function changeColor(clicked_id)
     <!--alert(clicked_id);-->
 }
 </script>
-
 </body>
 </html>
-<!--<article class="card">-->
-<!--<a href="#" data-toggle="modal" data-target="#myModal" id="page-button" style="background-color:{{note.color}};">-->
 
-<!--<figure class="thumbnail" style=" border: 0px solid #ddd;;padding: 0px;">-->
-<!--&lt;!&ndash;<img src="http://placekitten.com/810/610" alt="meow">&ndash;&gt;-->
-<!--</figure>-->
-<!--<div class="card-content">-->
-<!--<h2 id="textbox" >{{i.title }}</h2>-->
-<!--<p id="textarea">{{i.description}}</p>-->
-<!--{% for l in map_labels %}-->
-<!--{% if l.note_id == note %}-->
-<!--<span class="badge"style="margin-top: -42px;">{{l.label_id}}</span>-->
-<!--<label style="padding-bottom: 21px; padding-right: 7px;" >label-1 </label>-->
-<!--<label style="padding-bottom: 21px;" >label-1 </label>-->
-<!--{% endif %}-->
-<!--{% endfor %}-->
-
-</div>
-
-
-</a>
 
 

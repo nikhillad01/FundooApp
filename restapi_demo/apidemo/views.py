@@ -285,7 +285,7 @@ class getnotes(View):
 
         try:
             #note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
-            note_list = Notes.objects.filter(user=request.user).order_by('-created_time')   # shows note only added by specific user.
+            note_list = Notes.objects.filter(user=request.user,trash=False).order_by('-created_time')   # shows note only added by specific user.
         except Exception as e:
             print(e)
 
@@ -362,8 +362,9 @@ def deleteN(request,id):
             print(e)
             res['message']="Note not present for specific ID"
             return JsonResponse(res)
-
-        item.delete()
+        item.trash=True
+        item.save()
+        #item.delete()
         return redirect(reverse('getnotes'))
 
 
@@ -384,7 +385,75 @@ def updateNotes(request,pk):
     note.description=description
     note.created_time=ctime
     note.remainder=remainder
-    note.collaborate=colla
+    #note.collaborate=colla
     note.save()
     print(note)
     return HttpResponse('up[dated')
+
+
+def pin_unpin(request,pk):
+    item = Notes.objects.get(id=pk)
+    if item.is_pinned == False or item.is_pinned==None:
+        item.is_pinned=True
+        item.save()
+        #return HttpResponse("Item Pinned")
+        messages.success(request,message='Note pinned')
+        return redirect(reverse('getnotes'))
+    else:
+        item.is_pinned=False
+        item.save()
+        #return HttpResponse("Unpinned")
+        messages.success(request,message='Note Unpinned')
+        return redirect(reverse('getnotes'))
+
+
+
+def trash(request,pk):
+    item=Notes.objects.get(id=pk)
+
+    if item.trash==False or item.trash==None:
+        item.trash=True
+        item.save()
+        messages.success(request, message='Item moved to trash')
+        return redirect(reverse('getnotes'))
+    elif item.trash==True:
+        item.trash=False
+        item.save()
+        messages.success(request,message='item restored')
+
+
+class view_trash(View):
+
+    def get(self, request):
+        """ This method is used to read all trash notes """
+
+        res = {
+            'message': 'Something bad happened',
+            'data': {},
+            'success': False
+        }
+
+        """This method is used to read all the notes from database."""
+
+        try:
+            # note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
+            note_list = Notes.objects.filter(user=request.user, trash=True).order_by('-created_time')  # shows note only added by specific user.
+        except Exception as e:
+            print(e)
+
+        paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+        page = request.GET.get('page')
+        notelist = paginator.get_page(page)
+
+        res['message'] = "All Trash Notes"
+        res['success'] = True
+        res['data'] = notelist
+        print(notelist)
+        return render(request, 'in.html', {'notelist': note_list})
+
+
+def delete_forever(request, pk):
+    item = Notes.objects.get(id=pk)
+    item.delete()
+    messages.success(request, message='Item Deleted forever')
+    return redirect(reverse('getnotes'))
