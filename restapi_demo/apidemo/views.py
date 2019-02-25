@@ -1,7 +1,6 @@
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.views import View
-from django.views.decorators.cache import cache_page
 from django.views.decorators.http import require_POST
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
 from django.urls import reverse
@@ -29,7 +28,7 @@ from django.shortcuts import render, redirect
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from .serializers import NoteSerializer
-from rest_framework import status, generics
+from rest_framework import status
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -230,26 +229,23 @@ def demo(request):
 
 
 # API to create note
+#@login_required
+class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
 
-class AddNote(CreateAPIView):
+    """This class is used to create a note with REST """
 
     serializer_class=NoteSerializer     # serializer to add note(specifies and validate )
 
     def post(self, request):
-        try:
-            #print(request.data)
-            #print(request.data['remainder'])
 
+        try:
             res = {                                 # Response information .
                 'message': 'Something bad happened',
                 'data': {},
                 'success': False
             }
 
-            print('user--->',request.data['user'])
-            print(request.data)
-            print('for color',request.data['for_color'])
-            serializer = NoteSerializer(data=request.data)
+            serializer = NoteSerializer(data=request.data)  # takes the data from form.
             # check serialized data is valid or not
 
             if request.data['title'] and request.data['description'] is None:   # if title and description is not provided.
@@ -265,18 +261,23 @@ class AddNote(CreateAPIView):
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
-            return redirect(reverse('getnotes'))
+            return redirect(reverse('getnotes'))        # redirects to getnotes view
 
 
 
 class getnotes(View):
 
     def get(self, request):
+        # print(request.META)
+        for i in request.META:
+            print(i)
+        authorization = request.META.get('HTTP_AUTHORIZATION')
 
+        print('Authorization',authorization)
         """ This method is used to read all notes """
 
         res = {
-            'message': 'Something bad happened',
+            'message': 'Something bad happened',    # Response Data
             'data': {},
             'success': False
         }
@@ -284,8 +285,8 @@ class getnotes(View):
         """This method is used to read all the notes from database."""
 
         try:
-            #note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
-            note_list = Notes.objects.filter(user=request.user,trash=False).order_by('-created_time')   # shows note only added by specific user.
+            #note_list = Notes.objects.all().order_by('-created_time')   # gets all the note and sort by created time
+            note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False).order_by('-created_time')   # shows note only added by specific user.
         except Exception as e:
             print(e)
 
@@ -302,7 +303,11 @@ class getnotes(View):
 
 
 class updatenote(CreateAPIView):
-    serializer_class = NoteSerializer
+
+    """Updates notes  using REST Framework"""
+
+    serializer_class = NoteSerializer       # Serializer
+
     def put(self, request, pk):
         serializer = NoteSerializer(data=request.data)
         """This method is used to update the notes"""
@@ -325,8 +330,6 @@ class updatenote(CreateAPIView):
             print(e)
             return JsonResponse(res)
 
-       # serializer = NoteSerializer(note, data=request.data)  # check serialized data is valid or not
-
         if serializer.is_valid():
             # if valid then save it
             serializer.save()
@@ -344,7 +347,9 @@ class updatenote(CreateAPIView):
 
 def deleteN(request,id):
 
-    """This method is used to delete the note"""
+    """This method is used to delete the note
+    pk: Primary key
+    """
 
     res = {
         'message': 'ID not found',  # response information
@@ -364,68 +369,211 @@ def deleteN(request,id):
             return JsonResponse(res)
         item.trash=True
         item.save()
-        #item.delete()
         return redirect(reverse('getnotes'))
 
 
 def updateform(request,pk):
-        note = Notes.objects.get(id=pk)
-        return render(request,'Notes/update.html',{"note":note})
+
+    # this method is used to open the update note form for particular note
+
+    res = {
+        'message': 'ID not found',  # response information
+        'data': {},
+        'success': False
+    }
+
+    if pk ==None:                      # if Pk is not provided.
+        raise Exception('Invalid Details')
+
+    try:
+        note = Notes.objects.get(id=pk)  # gets the note with  PK
+
+    except Exception as e:
+        return HttpResponse(e)
+
+    return render(request, 'Notes/update.html', {"note": note})
+
+
+
+
+
 
 def updateNotes(request,pk):
-    note=Notes.objects.get(id=pk)
-    print(note)
+
+    """ This method is used to update the notes
+    pk: Primary key
+    """
+    res = {
+        'message': 'ID not found',  # response information
+        'data': {},
+        'success': False
+    }
+
+    if pk is None:                  # if pk is not provided.
+        raise Exception('Invalid Details')
+
+    try:
+
+        note=Notes.objects.get(id=pk)       # gets the data with primary key
+    except Exception as e:
+        print(e)
+
+    if request.POST['title']==None:             # if title is None.
+        raise Exception('No Valid details provided')
+
     title=request.POST.get('title')
     description = request.POST.get('description')
     ctime = request.POST.get('ctime')
     remainder = request.POST.get('remainder')
     colla = request.POST.get('colla')
-    print(title,colla,description)
+
+                          # changing data of note with form data.
+
     note.title=title
     note.description=description
     note.created_time=ctime
     note.remainder=remainder
     #note.collaborate=colla
-    note.save()
-    print(note)
-    return HttpResponse('up[dated')
+    note.save()             # saves the updated data
+    return redirect(reverse('getnotes'))
 
 
 def pin_unpin(request,pk):
-    item = Notes.objects.get(id=pk)
+
+    """This method is used to make note pinned or unpinned
+     pk: Primary key
+     """
+
+    if pk==None:                # if Pk is not provided
+        raise Exception('invalid Details')
+
+    try:
+        item = Notes.objects.get(id=pk)         # gets particular item from DB with PK.
+    except Exception as e:
+        return HttpResponse("Note not found")
+
     if item.is_pinned == False or item.is_pinned==None:
-        item.is_pinned=True
-        item.save()
-        #return HttpResponse("Item Pinned")
+        item.is_pinned=True         # if item is not pinned or False .. pin it
+        item.save()                 # saves to the DB.
         messages.success(request,message='Note pinned')
         return redirect(reverse('getnotes'))
     else:
-        item.is_pinned=False
+        item.is_pinned=False            # if item is already pinned , unpin it.
         item.save()
-        #return HttpResponse("Unpinned")
         messages.success(request,message='Note Unpinned')
         return redirect(reverse('getnotes'))
 
 
 
 def trash(request,pk):
-    item=Notes.objects.get(id=pk)
+    """This method is used to push item to trash
+    pk: Primary key
+    """
+    if pk == None:                  # if Pk is Not provided.
+        raise Exception('Invalid details')
+
+    try:
+        item=Notes.objects.get(id=pk)
+    except Exception as e :
+        return HttpResponse("No item found ")
+
 
     if item.trash==False or item.trash==None:
-        item.trash=True
+        item.trash=True         # if trash field is None or False, make note trash
         item.save()
         messages.success(request, message='Item moved to trash')
         return redirect(reverse('getnotes'))
-    elif item.trash==True:
+    elif item.trash==True:          # if item already in trash restore it.
         item.trash=False
         item.save()
         messages.success(request,message='item restored')
 
 
+
 class view_trash(View):
 
+    """This method is used to display all the items which are in trash"""
+
     def get(self, request):
-        """ This method is used to read all trash notes """
+
+
+        res = {
+            'message': 'Something bad happened',
+            'data': {},
+            'success': False
+        }
+
+        """ gets all the  notes which are added by specific user and which are in Trash """
+
+        try:
+            note_list = Notes.objects.filter(user=request.user, trash=True).order_by('-created_time')  # shows note only added by specific user.
+        except Exception as e:
+            print(e)
+
+        paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+        page = request.GET.get('page')        # also used as prefix in URL
+        notelist = paginator.get_page(page)     # gets data page by page
+
+        res['message'] = "All Trash Notes"
+        res['success'] = True
+        res['data'] = notelist
+        print(notelist)
+        return render(request, 'in.html', {'notelist': note_list})
+
+
+def delete_forever(request, pk):
+
+    """This method is used to permanently delete the note
+    pk: Primary key
+    """
+    if pk is None:
+        raise Exception("Invalid details")
+
+    try:
+        item = Notes.objects.get(id=pk)
+    except Exception as e :
+        return HttpResponse("Note not found ")
+
+    item.delete()       # deletes the note permanently
+    messages.success(request, message='Item Deleted forever')
+    return redirect(reverse('getnotes'))
+
+
+def is_archived(request,pk):
+
+    """This method is used to make note archive
+    pk: Primary key
+    """
+
+    if pk==None:            # if Pk is not provided.
+        raise Exception("invalid details")
+    try:
+        item = Notes.objects.get(id=pk)
+    except Exception as e:
+        return  HttpResponse("Note not found")
+
+    if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
+        item.is_archived = True                 # make note archive
+        item.save()
+        messages.success(request, message='Item is archived')
+        return redirect(reverse('getnotes'))
+    elif item.is_archived == True:          # it item is already archived
+        item.is_archived = False
+        item.save()
+        messages.success(request, message='Removed from archived')
+        return redirect(reverse('getnotes'))
+
+
+
+class View_is_archived(View):
+
+    """This method is used to display all the notes which are archived
+
+    """
+
+    def get(self, request):
+
+        """ Reads the notes by user and archived field"""
 
         res = {
             'message': 'Something bad happened',
@@ -436,8 +584,8 @@ class view_trash(View):
         """This method is used to read all the notes from database."""
 
         try:
-            # note_list = Notes.objects.all().order_by('-created_time')       # gets all the note and sort by created time
-            note_list = Notes.objects.filter(user=request.user, trash=True).order_by('-created_time')  # shows note only added by specific user.
+                  # gets all the note and sort by created time
+            note_list = Notes.objects.filter(user=request.user, is_archived=True).order_by('-created_time')  # shows note only added by specific user.
         except Exception as e:
             print(e)
 
@@ -448,12 +596,5 @@ class view_trash(View):
         res['message'] = "All Trash Notes"
         res['success'] = True
         res['data'] = notelist
-        print(notelist)
+        print(note_list)
         return render(request, 'in.html', {'notelist': note_list})
-
-
-def delete_forever(request, pk):
-    item = Notes.objects.get(id=pk)
-    item.delete()
-    messages.success(request, message='Item Deleted forever')
-    return redirect(reverse('getnotes'))

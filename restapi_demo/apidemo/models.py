@@ -27,7 +27,8 @@ class Photo(models.Model):              # Model For profile picture
         verbose_name = 'photo'
         verbose_name_plural = 'photos'
 
-class Notes(models.Model):
+
+class Notes(models.Model):      # Model to Create Notes.
     title = models.CharField(max_length=150,default=None)
     description = models.TextField()
     created_time = models.DateTimeField(auto_now_add=True, null=True)
@@ -42,5 +43,5 @@ class Notes(models.Model):
     collaborate = models.ManyToManyField(User, null=True, blank=True, related_name='collaborated_user')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner', null=True, blank=True)
 
-    def __str__(self):
+    def __str__(self):          # string Representation for model.
         return self.title
