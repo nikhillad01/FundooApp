@@ -41,16 +41,12 @@ localStorage.setItem('token', ("{{token.data}}"));
  var value = localStorage.getItem('token');
  console.log(value)
 
- $.ajax({
-   type : "GET",
-   beforeSend: function(xhr){xhr.setRequestHeader('Authorization', value);},
-   success : function(result) {
-       //set your variable to the result
-   },
-   error : function(result) {
-     //handle the error
-   }
- });
+ <!--$http.get({-->
+    <!--headers: {'Authorization': value}-->
+<!--});-->
+    <!--xhr.setRequestHeader("Authorization", value));-->
+    $http({method: 'GET', headers: {'Authorization': value}
+});
 </script>
 
 
@@ -373,14 +369,14 @@ localStorage.setItem('token', ("{{token.data}}"));
 {% for i in notelist %}
 
         <!--{% if forloop.first %}<div class="card-columns">{% endif %}-->
-        <article class="card" style="background-color:{{i.for_color}};height:240px;">
-        <a href="#" data-toggle="modal" data-target="#myModal" id="page-button" style="background-color:{{i.color}};" >
+        <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:240px;">
+        <a href="#" data-toggle="modal" data-target="#myModal" id="page-button i" style="background-color:{{i.color}};" >
                 <!--<figure class="thumbnail" style=" border: 0px solid #ddd;;padding: 0px;">-->
                 <!--</figure>-->
                 <div class="card-content" >
-                <h3 id="textbox" data-model-name="text_box"  >{{i.title }}</h3>
+                <h3 id="text_box" data-model-name="text_box"  value={{i.title}}>{{i.title }}</h3>
                     <!--<input type="text" id="abc" name="abc" value="abc">-->
-                <p id="textarea" data-model-name="text_area">{{i.description}}</p>
+                <p id="text_area" data-model-name="text_area" value={{i.description}}>{{i.description}}</p>
                 <a href="{% url 'pin_unpin' i.id %}" style="position: absolute;top: 10px;right: -250px;" class="card-link"><span class="glyphicon glyphicon-pushpin"></span></a>
 
                       <div>
@@ -533,52 +529,61 @@ localStorage.setItem('token', ("{{token.data}}"));
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
 
-        <!-- Modal Header -->
-        <div class="modal-header">
-          <button type="button" class="close" data-dismiss="modal">&times;</button>
-        </div>
 
-        <!-- Modal body -->
-        <div class="modal-body">
-            <input type="text" id="modal-text" placeholder="1st"><br>
-            <input type="text" id="modal-textarea" placeholder="2nd"><br>
-          Modal body..
-        </div>
+            <!-- Modal Header -->
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
 
-        <!-- Modal footer -->
-        <div class="modal-footer">
-          <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        </div>
+                <!-- Modal body -->
+          <form method="post" enctype="multipart/form-data"  action="{% url 'updateNotes' 204 %}">
+              <input type="hidden" name="_method" value="put" />
+                     {% csrf_token %}
+                <div class="modal-body">
 
+                    <input type="hidden" id="pk_note" name="pk_note" value="204">
+                     <input type="hidden" id="user" name="user" value={{user.id}}>
+                    <input type="text" id="title" name="title" placeholder="Title"><br>
+                    <input type="text" id="description" name="description" placeholder="description"><br>
+                      <input type="submit" />
+                </div></form>
+
+
+                <!-- Modal footer -->
+      </div>
       </div>
     </div>
   </div>
 
 </div>
 
+<!--<script>-->
+<!--$(document).ready(function(){-->
+     <!--$('.page-button').click(function(){-->
+     <!--$('#myModal').modal('show');-->
+     <!--&lt;!&ndash;$('#modal-text').val($('#text_box').text());&ndash;&gt;-->
+     <!--var f = $('.text_box').val()-->
+     <!--console.log(this.id);-->
+     <!--console.log(f);-->
+     <!--console.log("adasddadasdasad");-->
+     <!--$('#modal-textarea').val($('#text_area').text());-->
+     <!--});-->
+<!--});-->
+<!--</script>-->
 <script>
-$(document).ready(function(){
-     $('.page-button').click(function(){
-     $('#myModal').modal('show');
-     <!--$('#modal-text').val($('#text_box').text());-->
-     var f = $('.text_box').val()
+$("article").click(function(){
+  <!--alert(this.id,this.textbox);-->
+  <!--console.log(this.id);-->
+  var id = this.id;
+  $('#modal-text').val(id).text();
+  $('#form').attr('s',id);
+  console.log(id);
+  $('#pk_note').val(id).text();
 
-     console.log(f);
-     console.log("adasddadasdasad");
-     $('#modal-textarea').val($('#text_area').text());
-     });
+  <!--console.log(this.text_box);-->
+  <!--console.log($(#text_box).val());-->
 });
 </script>
-<script type="text/javascript">
-
-var fa= $('.text_box').val();
-console.log(fa);
-console.log("adkhadu");
-
-
-</script>
-
-
 <script type="text/javascript">
 function changeColor(clicked_id)
 {
@@ -596,6 +601,7 @@ function changeColor(clicked_id)
 </script>
 </body>
 </html>
+
 
 
 

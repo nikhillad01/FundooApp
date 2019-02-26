@@ -22,13 +22,14 @@ from django.contrib.auth import get_user_model, authenticate
 import jwt
 from .serializers import TokenAuthentication
 from .serializers import registrationSerializer
-from rest_framework.generics import CreateAPIView
+from rest_framework.generics import CreateAPIView, UpdateAPIView
 from .forms import PhotoForm
 from django.shortcuts import render, redirect
 from django.core.cache import cache
 from django.core.paginator import Paginator
 from .serializers import NoteSerializer
 from rest_framework import status
+from .custom_decorators import custom_login_required
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -269,11 +270,10 @@ class getnotes(View):
 
     def get(self, request):
         # print(request.META)
-        for i in request.META:
+        for  i in request.META:
             print(i)
-        authorization = request.META.get('HTTP_AUTHORIZATION')
 
-        print('Authorization',authorization)
+       # print('Authorization',authorization)
         """ This method is used to read all notes """
 
         res = {
@@ -283,26 +283,27 @@ class getnotes(View):
         }
 
         """This method is used to read all the notes from database."""
-
+        print('request user',request.user)
         try:
             #note_list = Notes.objects.all().order_by('-created_time')   # gets all the note and sort by created time
             note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False).order_by('-created_time')   # shows note only added by specific user.
+
+
+            paginator = Paginator(note_list, 9)          # Show 9 contacts per page
+            page = request.GET.get('page')
+            notelist = paginator.get_page(page)
+
+            res['message'] = "All Notes"
+            res['success'] = True
+            res['data'] =notelist
+
+            return render(request, 'in.html', {'notelist': notelist})
         except Exception as e:
             print(e)
 
-        paginator = Paginator(note_list, 9)          # Show 9 contacts per page
-        page = request.GET.get('page')
-        notelist = paginator.get_page(page)
 
-        res['message'] = "All Notes"
-        res['success'] = True
-        res['data'] =notelist
+class updatenote(UpdateAPIView):
 
-        return render(request, 'in.html', {'notelist': notelist})
-
-
-
-class updatenote(CreateAPIView):
 
     """Updates notes  using REST Framework"""
 
@@ -344,7 +345,7 @@ class updatenote(CreateAPIView):
         return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
 
-
+@custom_login_required
 def deleteN(request,id):
 
     """This method is used to delete the note
@@ -371,7 +372,7 @@ def deleteN(request,id):
         item.save()
         return redirect(reverse('getnotes'))
 
-
+@custom_login_required
 def updateform(request,pk):
 
     # this method is used to open the update note form for particular note
@@ -397,12 +398,15 @@ def updateform(request,pk):
 
 
 
-
+@custom_login_required
 def updateNotes(request,pk):
 
     """ This method is used to update the notes
     pk: Primary key
     """
+    pk_note=request.POST.get('pk_note')
+    print('found pk',pk_note)
+    pk=pk_note
     res = {
         'message': 'ID not found',  # response information
         'data': {},
@@ -411,33 +415,41 @@ def updateNotes(request,pk):
 
     if pk is None:                  # if pk is not provided.
         raise Exception('Invalid Details')
-
+    print("if dwn")
+    title=request.POST.get('title')
+    update_description=request.POST.get('description')
+    print(title)
+    print(update_description)
     try:
 
-        note=Notes.objects.get(id=pk)       # gets the data with primary key
+        note=Notes.objects.get(id=pk_note)       # gets the data with primary key
+        print('note',note)
+
+        # if request.POST['update_title']==None:             # if title is None.
+        #     raise Exception('No Valid details provided')
+
+        title=request.POST.get('title')
+        description = request.POST.get('description')
+        # ctime = request.POST.get('ctime')
+        # remainder = request.POST.get('remainder')
+        # colla = request.POST.get('colla')
+
+                              # changing data of note with form data.
+
+        note.title=title
+        note.description=description
+        # note.created_time=ctime
+        # note.remainder=remainder
+        #note.collaborate=colla
+        note.save()             # saves the updated data
     except Exception as e:
+        print('exception')
         print(e)
-
-    if request.POST['title']==None:             # if title is None.
-        raise Exception('No Valid details provided')
-
-    title=request.POST.get('title')
-    description = request.POST.get('description')
-    ctime = request.POST.get('ctime')
-    remainder = request.POST.get('remainder')
-    colla = request.POST.get('colla')
-
-                          # changing data of note with form data.
-
-    note.title=title
-    note.description=description
-    note.created_time=ctime
-    note.remainder=remainder
-    #note.collaborate=colla
-    note.save()             # saves the updated data
     return redirect(reverse('getnotes'))
 
 
+
+@custom_login_required
 def pin_unpin(request,pk):
 
     """This method is used to make note pinned or unpinned
@@ -464,7 +476,7 @@ def pin_unpin(request,pk):
         return redirect(reverse('getnotes'))
 
 
-
+@custom_login_required
 def trash(request,pk):
     """This method is used to push item to trash
     pk: Primary key
@@ -520,7 +532,7 @@ class view_trash(View):
         print(notelist)
         return render(request, 'in.html', {'notelist': note_list})
 
-
+@custom_login_required
 def delete_forever(request, pk):
 
     """This method is used to permanently delete the note
@@ -538,7 +550,7 @@ def delete_forever(request, pk):
     messages.success(request, message='Item Deleted forever')
     return redirect(reverse('getnotes'))
 
-
+@custom_login_required
 def is_archived(request,pk):
 
     """This method is used to make note archive
