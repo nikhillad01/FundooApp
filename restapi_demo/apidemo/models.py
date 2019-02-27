@@ -45,3 +45,22 @@ class Notes(models.Model):      # Model to Create Notes.
 
     def __str__(self):          # string Representation for model.
         return self.title
+
+
+class Labels(models.Model):
+    label_name=models.CharField(max_length=50)
+    created_time= models.DateTimeField(auto_now_add=True,null=True)
+    user= models.ForeignKey(User, on_delete=models.CASCADE,null=True, blank=True)
+
+    def __str__(self):
+        return self.label_name
+
+
+class Map_labels(models.Model):
+    label_id=models.ForeignKey(Labels,null=True,blank=True,on_delete=models.CASCADE)
+    user=models.ForeignKey(User, on_delete=models.CASCADE,null=True, blank=True)
+    created_time = models.DateTimeField(auto_now_add=True, null=True)
+    note=models.ForeignKey(Notes,on_delete=models.CASCADE,null=True, blank=True)
+
+    def __str__(self):
+         return str(self.note)

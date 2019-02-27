@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fundoo</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
     <script type="text/javascript" src="{% static 'JS/script.js' %}"></script>
@@ -34,6 +34,15 @@
 </style>
 
 <!--stores token to clients( browsers local storage)-->
+<script>
+$(document).ready(function(){
+  $('.dropdown-submenu a.test').on("click", function(e){
+    <!--$(this).next('ul').toggle();-->
+    <!--e.stopPropagation();-->
+    <!--e.preventDefault();-->
+  });
+});
+</script>
 
 <script>
 localStorage.setItem('token', ("{{token.data}}"));
@@ -49,7 +58,17 @@ localStorage.setItem('token', ("{{token.data}}"));
 });
 </script>
 
+<style>
+.dropdown-submenu {
+  position: relative;
+}
 
+.dropdown-submenu .dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -1px;
+}
+</style>
 <body>
 
 <!--Wrapper class is used wrap all the elements which are used to toggle-->
@@ -193,6 +212,18 @@ localStorage.setItem('token', ("{{token.data}}"));
                         </li>
                           {% endfor %}
                     <li style="margin-top: 22px;">
+
+                        <!--Add label-->
+                        {% for i in labels %}
+                             <!--<a href="#lable" data-toggle="modal" data-target="#mylabelModal" id="label-modal">-->
+                        <a href="#" style="margin-right:5%;">
+                        <span class="glyphicon glyphicon-tag"></span>
+                        <span class="fa fa-anchor solo"><b> {{i}} </b></span>
+                        </a>
+                            <!--<span class="fa fa-anchor solo"><b>{{i}}</b></span>-->
+
+                        </a>
+                        {% endfor %}
                         <a href="#lable" data-toggle="modal" data-target="#mylabelModal" id="label-modal">
                             <span class="glyphicon glyphicon-pencil"></span>
                             <span class="fa fa-anchor solo"><b>Edit labels</b></span>
@@ -446,30 +477,67 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                             <!--Archive-->
 
-<div ><a href="{% url 'is_archived' i.id %}" role="button"   class="btn" style="position:absolute; left:250px; top:2px;width:10px;" >
+                            <div ><a href="{% url 'is_archived' i.id %}" role="button"   class="btn" style="position:absolute; left:250px; top:2px;width:10px;" >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="archive">
                                     <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5l-4 4-4-4 1.41-1.41L11 13.67V10h2v3.67l1.59-1.59L16 13.5z"></path>
                                     </svg></a>
                                 </div>
 
-
+                               </div>
             <!--More Options-->
 
-                <div class="dropdown show" style="width:80px;top:-30px;">
-  <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="padding-left:240px;width:20px;">
-    <span class="glyphicon glyphicon-option-vertical"></span>
-  </a>
+          <div class="dropdown  show dropleft" style="width:80px;top:-30px;" >
+        <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="padding-left:240px;width:20px;">
+            <span class="glyphicon glyphicon-option-vertical" style="padding-left:130px;width:20px;top:-17px"></span>
+          </a>
+            <ul class="dropdown-menu dropleft">
+                <a class="dropdown-item" href="{% url 'deleteN' i.id %}" style="padding-left:100px;width:20;">Trash</a>
+            <a class="dropdown-item" href="{% url 'updatenote' i.id %}" style="padding-left:100px;">Update</a>
+            <a class="dropdown-item" href="{% url 'updateform' i.id %}" style="padding-left:100px;">New Update</a>
+              <a class="dropdown-item" href="{% url 'delete_forever' i.id %}" style="padding-left:100px;">Delete Forever</a>
 
-  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
-       <a class="dropdown-item" href="{% url 'deleteN' i.id %}" style="padding-left:100px;width:20;">Trash</a>
-    <a class="dropdown-item" href="{% url 'updatenote' i.id %}" style="padding-left:100px;">Update</a>
-    <a class="dropdown-item" href="{% url 'updateform' i.id %}" style="padding-left:100px;">New Update</a>
-         <a class="dropdown-item" href="{% url 'delete_forever' i.id %}" style="padding-left:100px;">Delete Forever</a>
+              <li class="dropdown-submenu "  >
+                <a class="test"  href="#" style="padding-left:100px;">Add Label</a>
+                <ul class="dropdown-menu" style="padding-left:100px;">
+                    {% for i in labels %}
+                    <li>   <a href="#"  >{{i}}</a></li>
+                    {% endfor %}
 
-  </div>
+                </ul>
+              </li>
+            </ul>
+          </div>
 
-                      </div>
 
+
+
+                                   <!--<><><><><>-->
+                                                  <!--<div class="dropdown show" style="width:80px;top:-30px;">-->
+  <!--<a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="padding-left:240px;width:20px;">-->
+    <!--<span class="glyphicon glyphicon-option-vertical"></span>-->
+  <!--</a>-->
+
+  <!--<div class="dropdown-menu" aria-labelledby="dropdownMenuLink">-->
+       <!--<a class="dropdown-item" href="{% url 'deleteN' i.id %}" style="padding-left:100px;width:20;">Trash</a>-->
+    <!--<a class="dropdown-item" href="{% url 'updatenote' i.id %}" style="padding-left:100px;">Update</a>-->
+    <!--<a class="dropdown-item" href="{% url 'updateform' i.id %}" style="padding-left:100px;">New Update</a>-->
+      <!--<a class="dropdown-item" href="{% url 'delete_forever' i.id %}" style="padding-left:100px;">Delete Forever</a>-->
+
+
+  <!--</div>-->
+
+                      <!--</div>-->
+
+
+<script>
+$(document).ready(function(){
+  $('.dropdown-submenu a.test').on("click", function(e){
+    $(this).next('ul').toggle();
+    e.stopPropagation();
+    e.preventDefault();
+  });
+});
+</script>
                     <!--Ending Note For Loop -->
 
 
@@ -482,11 +550,6 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
 
-
-</div>
-</center><br>
-</div>
-</div>
 
 
                         <!--Pagination-->
@@ -556,6 +619,42 @@ localStorage.setItem('token', ("{{token.data}}"));
   </div>
 
 </div>
+
+
+                            <!--Modal for label add-->
+<div class="modal fade" id="mylabelModal" role="dialog">
+         <!--<div class="modal-dialog">-->
+              <div class="col-md-3" id="label-card">
+              <div class="panel panel-theme">
+                   <div class="panel-heading">
+                  <h3 class="panel-title">Edit Labels</h3>
+                   </div>
+                  <div class="panel-body">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <form method="POST" action="{% url 'add_labels' user.id %}">
+                        <input type="text" name="label_name" id="label_name" placeholder="Create new label"/>
+                        <input type="submit" />
+                    </form>
+                    {% for i in labels %}
+                      <!--<a href="{% url 'delete_label' i.id %}">-->
+                      <!--{{i}}-->
+
+                      <span class="glyphicon glyphicon-tag"></span>
+                        <span class="fa fa-anchor solo"><b> {{i}} </b></span>
+                          <a href="{% url 'delete_label' i.id %}">
+
+                               <span class="glyphicon glyphicon-trash"></span>
+
+                          </a><br>
+                      <!--</a>-->
+                      {% endfor %}
+                  </div>
+              </div>
+              </div>
+<!--</div>-->
+</div>
+
+
 
 <!--<script>-->
 <!--$(document).ready(function(){-->

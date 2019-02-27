@@ -240,6 +240,7 @@ class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
     def post(self, request):
 
         try:
+
             res = {                                 # Response information .
                 'message': 'Something bad happened',
                 'data': {},
@@ -288,7 +289,8 @@ class getnotes(View):
             #note_list = Notes.objects.all().order_by('-created_time')   # gets all the note and sort by created time
             note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False).order_by('-created_time')   # shows note only added by specific user.
 
-
+            labels = Labels.objects.filter(user=request.user).order_by('-created_time')
+            print(labels)
             paginator = Paginator(note_list, 9)          # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
@@ -297,7 +299,8 @@ class getnotes(View):
             res['success'] = True
             res['data'] =notelist
 
-            return render(request, 'in.html', {'notelist': notelist})
+            return render(request, 'in.html', {'notelist': notelist,'labels':labels})
+
         except Exception as e:
             print(e)
 
@@ -610,3 +613,42 @@ class View_is_archived(View):
         res['data'] = notelist
         print(note_list)
         return render(request, 'in.html', {'notelist': note_list})
+
+from .models import Labels,Map_labels
+def add_labels(request,pk):
+    label_name=request.POST['label_name']
+    user=pk
+
+    label=Labels.objects.create(user=User.objects.get(id=user),label_name=label_name)
+    label.save()
+    messages.success(request, message='Label Created')
+    return redirect(reverse('getnotes'))
+
+def map_labels(request):
+    label_id=request.POST['label_id']
+    user=request.POST['user']
+    note=request.POST['note']
+
+    map=Map_labels.objects.create(label_id=Labels.objects.get(id=label_id),user=User.objects.get(id=user),note=Notes.objects.get(id=note))
+    map.save()
+    return HttpResponse("Label mapped")
+
+def delete_label(request,pk):
+    label=Labels.objects.get(id=pk)
+    label.delete()
+    messages.success(request, message='Label deleted')
+    return redirect(reverse('getnotes'))
+
+
+def view_notes_for_each_label(request):
+
+    label_id=request.POST['label_id']
+    user_id=request.POST['user_id']
+    print(label_id)
+    print(user_id)
+
+    note_list = Map_labels.objects.filter(user_id=user_id,label_id=label_id)
+    # messages.success(request, message='Label deleted')
+    # return redirect(reverse('getnotes'))
+    print(note_list)
+    return HttpResponse(note_list)
