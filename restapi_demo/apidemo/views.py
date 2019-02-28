@@ -1,3 +1,5 @@
+import json
+
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.views import View
@@ -239,6 +241,7 @@ class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
 
     def post(self, request):
 
+
         try:
 
             res = {                                 # Response information .
@@ -271,11 +274,10 @@ class getnotes(View):
 
     def get(self, request):
         # print(request.META)
-        for  i in request.META:
-            print(i)
 
+        print('aUTH @!!@!@!@!@ ',request.META.get('HTTP_AUTHORIZATION'))
        # print('Authorization',authorization)
-        """ This method is used to read all notes """
+        #""" This method is used to read all notes """
 
         res = {
             'message': 'Something bad happened',    # Response Data
@@ -287,10 +289,15 @@ class getnotes(View):
         print('request user',request.user)
         try:
             #note_list = Notes.objects.all().order_by('-created_time')   # gets all the note and sort by created time
-            note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False).order_by('-created_time')   # shows note only added by specific user.
+            note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False).values().order_by('-created_time')   # shows note only added by specific user.
 
+            new_note_list = Notes.objects.filter(user=request.user, trash=False, is_archived=False).values('title',
+                                                                                                       'description',
+                                                                                                       'is_pinned').order_by(
+                '-created_time')  # shows note only added by specific user.
+            #print('@@@@@@@@',note_list)
             labels = Labels.objects.filter(user=request.user).order_by('-created_time')
-            print(labels)
+            #print(labels)
             paginator = Paginator(note_list, 9)          # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
@@ -299,6 +306,17 @@ class getnotes(View):
             res['success'] = True
             res['data'] =notelist
 
+            #print(note_list)
+            data=[]
+            for i in new_note_list:
+                data.append(i)
+            print(type(data))
+           # print(data)
+            d=data
+            print(d)
+
+
+            #return JsonResponse(d,safe=False)
             return render(request, 'in.html', {'notelist': notelist,'labels':labels})
 
         except Exception as e:
@@ -367,13 +385,15 @@ def deleteN(request,id):
     else:
         try:
             item = Notes.objects.get(pk=id)     # checks if note is present of specific id
+
+            item.trash=True
+            item.save()
+            return redirect(reverse('getnotes'))
+
         except Exception as e:
             print(e)
-            res['message']="Note not present for specific ID"
+            res['message'] = "Note not present for specific ID"
             return JsonResponse(res)
-        item.trash=True
-        item.save()
-        return redirect(reverse('getnotes'))
 
 @custom_login_required
 def updateform(request,pk):
@@ -387,15 +407,17 @@ def updateform(request,pk):
     }
 
     if pk ==None:                      # if Pk is not provided.
-        raise Exception('Invalid Details')
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
 
     try:
         note = Notes.objects.get(id=pk)  # gets the note with  PK
+        return render(request, 'Notes/update.html', {"note": note})
 
     except Exception as e:
         return HttpResponse(e)
 
-    return render(request, 'Notes/update.html', {"note": note})
+
 
 
 
@@ -417,19 +439,18 @@ def updateNotes(request,pk):
     }
 
     if pk is None:                  # if pk is not provided.
-        raise Exception('Invalid Details')
-    print("if dwn")
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
+
+
     title=request.POST.get('title')
     update_description=request.POST.get('description')
-    print(title)
-    print(update_description)
+
+
     try:
 
         note=Notes.objects.get(id=pk_note)       # gets the data with primary key
         print('note',note)
-
-        # if request.POST['update_title']==None:             # if title is None.
-        #     raise Exception('No Valid details provided')
 
         title=request.POST.get('title')
         description = request.POST.get('description')
@@ -445,10 +466,12 @@ def updateNotes(request,pk):
         # note.remainder=remainder
         #note.collaborate=colla
         note.save()             # saves the updated data
+        return redirect(reverse('getnotes'))
+
     except Exception as e:
         print('exception')
         print(e)
-    return redirect(reverse('getnotes'))
+
 
 
 
@@ -460,23 +483,26 @@ def pin_unpin(request,pk):
      """
 
     if pk==None:                # if Pk is not provided
-        raise Exception('invalid Details')
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
 
     try:
         item = Notes.objects.get(id=pk)         # gets particular item from DB with PK.
-    except Exception as e:
-        return HttpResponse("Note not found")
 
-    if item.is_pinned == False or item.is_pinned==None:
-        item.is_pinned=True         # if item is not pinned or False .. pin it
-        item.save()                 # saves to the DB.
-        messages.success(request,message='Note pinned')
-        return redirect(reverse('getnotes'))
-    else:
-        item.is_pinned=False            # if item is already pinned , unpin it.
-        item.save()
-        messages.success(request,message='Note Unpinned')
-        return redirect(reverse('getnotes'))
+
+        if item.is_pinned == False or item.is_pinned==None:
+            item.is_pinned=True         # if item is not pinned or False .. pin it
+            item.save()                 # saves to the DB.
+            messages.success(request,message='Note pinned')
+            return redirect(reverse('getnotes'))
+        else:
+            item.is_pinned=False            # if item is already pinned , unpin it.
+            item.save()
+            messages.success(request,message='Note Unpinned')
+            return redirect(reverse('getnotes'))
+
+    except Exception as e:
+        return HttpResponse("Note not found",e)
 
 
 @custom_login_required
@@ -485,23 +511,26 @@ def trash(request,pk):
     pk: Primary key
     """
     if pk == None:                  # if Pk is Not provided.
-        raise Exception('Invalid details')
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
 
     try:
         item=Notes.objects.get(id=pk)
+
+
+
+        if item.trash==False or item.trash==None:
+            item.trash=True         # if trash field is None or False, make note trash
+            item.save()
+            messages.success(request, message='Item moved to trash')
+            return redirect(reverse('getnotes'))
+        elif item.trash==True:          # if item already in trash restore it.
+            item.trash=False
+            item.save()
+            messages.success(request,message='item restored')
+
     except Exception as e :
-        return HttpResponse("No item found ")
-
-
-    if item.trash==False or item.trash==None:
-        item.trash=True         # if trash field is None or False, make note trash
-        item.save()
-        messages.success(request, message='Item moved to trash')
-        return redirect(reverse('getnotes'))
-    elif item.trash==True:          # if item already in trash restore it.
-        item.trash=False
-        item.save()
-        messages.success(request,message='item restored')
+        return HttpResponse("No item found ",e)
 
 
 
@@ -522,18 +551,20 @@ class view_trash(View):
 
         try:
             note_list = Notes.objects.filter(user=request.user, trash=True).order_by('-created_time')  # shows note only added by specific user.
+
+
+            paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+            page = request.GET.get('page')        # also used as prefix in URL
+            notelist = paginator.get_page(page)     # gets data page by page
+
+            res['message'] = "All Trash Notes"
+            res['success'] = True
+            res['data'] = notelist
+            print(notelist)
+            return render(request, 'in.html', {'notelist': note_list})
+
         except Exception as e:
             print(e)
-
-        paginator = Paginator(note_list, 9)  # Show 9 contacts per page
-        page = request.GET.get('page')        # also used as prefix in URL
-        notelist = paginator.get_page(page)     # gets data page by page
-
-        res['message'] = "All Trash Notes"
-        res['success'] = True
-        res['data'] = notelist
-        print(notelist)
-        return render(request, 'in.html', {'notelist': note_list})
 
 @custom_login_required
 def delete_forever(request, pk):
@@ -541,17 +572,25 @@ def delete_forever(request, pk):
     """This method is used to permanently delete the note
     pk: Primary key
     """
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
     if pk is None:
-        raise Exception("Invalid details")
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
 
     try:
         item = Notes.objects.get(id=pk)
-    except Exception as e :
-        return HttpResponse("Note not found ")
 
-    item.delete()       # deletes the note permanently
-    messages.success(request, message='Item Deleted forever')
-    return redirect(reverse('getnotes'))
+        item.delete()       # deletes the note permanently
+        messages.success(request, message='Item Deleted forever')
+        return redirect(reverse('getnotes'))
+
+    except Exception as e:
+        return HttpResponse(res)
+
 
 @custom_login_required
 def is_archived(request,pk):
@@ -560,23 +599,33 @@ def is_archived(request,pk):
     pk: Primary key
     """
 
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
     if pk==None:            # if Pk is not provided.
-        raise Exception("invalid details")
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
+
     try:
         item = Notes.objects.get(id=pk)
-    except Exception as e:
-        return  HttpResponse("Note not found")
 
-    if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
-        item.is_archived = True                 # make note archive
-        item.save()
-        messages.success(request, message='Item is archived')
-        return redirect(reverse('getnotes'))
-    elif item.is_archived == True:          # it item is already archived
-        item.is_archived = False
-        item.save()
-        messages.success(request, message='Removed from archived')
-        return redirect(reverse('getnotes'))
+
+        if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
+            item.is_archived = True                 # make note archive
+            item.save()
+            messages.success(request, message='Item is archived')
+            return redirect(reverse('getnotes'))
+        elif item.is_archived == True:          # it item is already archived
+            item.is_archived = False
+            item.save()
+            messages.success(request, message='Removed from archived')
+            return redirect(reverse('getnotes'))
+
+    except Exception as e:
+        return  HttpResponse(res)
 
 
 
@@ -585,6 +634,11 @@ class View_is_archived(View):
     """This method is used to display all the notes which are archived
 
     """
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
 
     def get(self, request):
 
@@ -601,54 +655,155 @@ class View_is_archived(View):
         try:
                   # gets all the note and sort by created time
             note_list = Notes.objects.filter(user=request.user, is_archived=True).order_by('-created_time')  # shows note only added by specific user.
+
+
+            paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+            page = request.GET.get('page')
+            notelist = paginator.get_page(page)
+
+            res['message'] = "All Trash Notes"
+            res['success'] = True
+            res['data'] = notelist
+            print(note_list)
+            return render(request, 'in.html', {'notelist': note_list})
+
         except Exception as e:
-            print(e)
-
-        paginator = Paginator(note_list, 9)  # Show 9 contacts per page
-        page = request.GET.get('page')
-        notelist = paginator.get_page(page)
-
-        res['message'] = "All Trash Notes"
-        res['success'] = True
-        res['data'] = notelist
-        print(note_list)
-        return render(request, 'in.html', {'notelist': note_list})
+            print(res)
 
 from .models import Labels,Map_labels
 def add_labels(request,pk):
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
+    if pk==None:            # if Pk is not provided.
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
+
+
     label_name=request.POST['label_name']
     user=pk
 
-    label=Labels.objects.create(user=User.objects.get(id=user),label_name=label_name)
-    label.save()
-    messages.success(request, message='Label Created')
-    return redirect(reverse('getnotes'))
+    try:
+        label=Labels.objects.create(user=User.objects.get(id=user),label_name=label_name)
+        label.save()
+        messages.success(request, message='Label Created')
+        return redirect(reverse('getnotes'))
 
-def map_labels(request):
-    label_id=request.POST['label_id']
-    user=request.POST['user']
-    note=request.POST['note']
+    except Exception as e:
+        return HttpResponse(res,e)
 
-    map=Map_labels.objects.create(label_id=Labels.objects.get(id=label_id),user=User.objects.get(id=user),note=Notes.objects.get(id=note))
-    map.save()
-    return HttpResponse("Label mapped")
+
+def map_labels(request,pk,id,key, *args ,**kwargs):
+
+    """This method is used to map labels with each notes """
+
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+    label_id=pk
+    user=id
+    note_id=key
+    # if request.POST['label_id'] or request.POST['user'] or request.POST['note']==None:
+    #     messages.error('Invalid Details')
+    #     return redirect(reverse('getnotes'))
+
+    # label_id=request.POST['label_id']
+    # user=request.POST['user']
+    # note=request.POST['note']
+    print(label_id)
+    print(user)
+    print(note_id)
+    try:
+        map=Map_labels.objects.create(label_id=Labels.objects.get(id=label_id),user=User.objects.get(id=user),note=Notes.objects.get(id=note_id))
+        map.save()
+        res = {
+            'message': 'label mapped',  # Response Data
+            'data': {},
+            'success': True
+        }
+        return HttpResponse(res)
+
+    except Exception as e :
+        return HttpResponse(res)
+
 
 def delete_label(request,pk):
-    label=Labels.objects.get(id=pk)
-    label.delete()
-    messages.success(request, message='Label deleted')
-    return redirect(reverse('getnotes'))
+
+    """This method is used to delete label
+    Param: request, Pk : passed with request"""
+
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
+    if pk == None:  # if Pk is not provided.
+        messages.error('Invalid Details')
+        return redirect(reverse('getnotes'))
+    try:
+
+        label=Labels.objects.get(id=pk)
+        label.delete()
+        messages.success(request, message='Label deleted')
+        return redirect(reverse('getnotes'))
+
+    except Exception as e:
+        return HttpResponse(res)
 
 
-def view_notes_for_each_label(request):
 
-    label_id=request.POST['label_id']
-    user_id=request.POST['user_id']
+def view_notes_for_each_label(request,pk,id):
+
+    """This method is used to view all notes associated with each label"""
+
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
+    # if request.POST['label_id'] or request.POST['user_id'] == None:
+    #     messages.error(request,'Invalid Details')
+    #     return redirect(reverse('getnotes'))
+
+    label_id=pk
+    user_id=id
     print(label_id)
     print(user_id)
+    try:
 
-    note_list = Map_labels.objects.filter(user_id=user_id,label_id=label_id)
-    # messages.success(request, message='Label deleted')
-    # return redirect(reverse('getnotes'))
-    print(note_list)
-    return HttpResponse(note_list)
+        note_list = Map_labels.objects.filter(user_id=user_id,label_id=label_id).values('id','label_id','user_id','note_id')
+        # messages.success(request, message='Label deleted')
+        # return redirect(reverse('getnotes'))
+        #note = Notes.objects.get(note_list.note_id)
+        print(note_list)
+
+
+        data=[]
+        for i in note_list:
+            data.append(i)
+
+
+        d=json.dumps(data)
+        print(data)
+        print(type(d))
+        print(data[0])
+        da=[]
+        for i in data:
+            json.dumps(i)
+            print(i)
+            print(i['note_id'])
+            j=Notes.objects.filter(pk=i['note_id']).values()
+            da.append(j)
+        print("All notes for specific label")
+        print(da)
+        return HttpResponse(d)
+
+    except Exception as e:
+        return HttpResponse(e)

@@ -366,7 +366,16 @@ a.article-title:hover {
     top:20px;
 
 }
-
+.btn {
+    border: none;
+    width: 10px;
+    height: 30px;
+    color: gray;
+    background-color: white;
+    background: transparent;
+    /* font: normal 16px Roboto,sans-serif; */
+    margin-top: -68px;
+}
 #sidebar .toggle-btn span{
     display:block;
     width:30px;
@@ -998,7 +1007,7 @@ h2 {
 .card a {
 	color: black;
 	text-decoration: none;
-	width: 278px;
+	width: 166px;
 	margin-left: -97px;
 
 }
@@ -1218,7 +1227,40 @@ background-color: transparent;
   @include media-breakpoint-only(xl) {
     column-count: 5;
   }
+  .column {
+  float: left;
+  width: 25%;
+  padding: 0 10px;
 }
+
+/* Remove extra left and right margins, due to padding */
+.row {margin: 0 -5px;}
+
+/* Clear floats after the columns */
+.row:after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+/* Responsive columns */
+@media screen and (max-width: 600px) {
+  .column {
+    width: 100%;
+    display: block;
+    margin-bottom: 20px;
+  }
+}
+
+/* Style the counter cards */
+.card {
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  padding: 16px;
+  text-align: center;
+  background-color: #f1f1f1;
+}
+}
+
 
 
 .neVct-Ne3sFf-Bz112c {
@@ -1268,9 +1310,9 @@ background-color: transparent;
 }
 
 .dropdown-submenu .dropdown-menu {
-  top: 0;
-  left: 100%;
-  margin-top: -1px;
+    top: 0;
+    left: 20px !important;
+    margin-top: -1px;
 }
 
 .btn-circle {
