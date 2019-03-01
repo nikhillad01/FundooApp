@@ -32,6 +32,7 @@ from django.core.paginator import Paginator
 from .serializers import NoteSerializer
 from rest_framework import status
 from .custom_decorators import custom_login_required
+from .models import Labels,Map_labels
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -315,9 +316,11 @@ class getnotes(View):
             d=data
             print(d)
 
+            all_labels=Labels.objects.all()
+            all_map=Map_labels.objects.all()
 
             #return JsonResponse(d,safe=False)
-            return render(request, 'in.html', {'notelist': notelist,'labels':labels})
+            return render(request, 'in.html', {'notelist': notelist,'labels':labels,'all_labels':all_labels,'all_map':all_map})
 
         except Exception as e:
             print(e)
@@ -656,7 +659,7 @@ class View_is_archived(View):
                   # gets all the note and sort by created time
             note_list = Notes.objects.filter(user=request.user, is_archived=True).order_by('-created_time')  # shows note only added by specific user.
 
-
+            print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',note_list)
             paginator = Paginator(note_list, 9)  # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
@@ -670,7 +673,8 @@ class View_is_archived(View):
         except Exception as e:
             print(res)
 
-from .models import Labels,Map_labels
+
+@custom_login_required
 def add_labels(request,pk):
     res = {
         'message': 'Something bad happened',  # Response Data
@@ -695,7 +699,7 @@ def add_labels(request,pk):
     except Exception as e:
         return HttpResponse(res,e)
 
-
+@custom_login_required
 def map_labels(request,pk,id,key, *args ,**kwargs):
 
     """This method is used to map labels with each notes """
@@ -726,12 +730,13 @@ def map_labels(request,pk,id,key, *args ,**kwargs):
             'data': {},
             'success': True
         }
-        return HttpResponse(res)
+        messages.success(request, message='Label mapped')
+        return redirect(reverse('getnotes'))
 
     except Exception as e :
         return HttpResponse(res)
 
-
+@custom_login_required
 def delete_label(request,pk):
 
     """This method is used to delete label
@@ -758,7 +763,8 @@ def delete_label(request,pk):
 
 
 
-def view_notes_for_each_label(request,pk,id):
+@custom_login_required
+def view_notes_for_each_label(request, pk, id):
 
     """This method is used to view all notes associated with each label"""
 
@@ -768,42 +774,75 @@ def view_notes_for_each_label(request,pk,id):
         'success': False
     }
 
-    # if request.POST['label_id'] or request.POST['user_id'] == None:
-    #     messages.error(request,'Invalid Details')
-    #     return redirect(reverse('getnotes'))
-
-    label_id=pk
-    user_id=id
-    print(label_id)
-    print(user_id)
     try:
 
-        note_list = Map_labels.objects.filter(user_id=user_id,label_id=label_id).values('id','label_id','user_id','note_id')
-        # messages.success(request, message='Label deleted')
-        # return redirect(reverse('getnotes'))
-        #note = Notes.objects.get(note_list.note_id)
-        print(note_list)
+        if pk and id !=None:            # if pk and id is not None.
+
+            label_id=pk         # sets the pk and id tp label and user id
+            user_id=id
+
+            note_list = Map_labels.objects.filter(user_id=user_id, label_id=label_id).values('id', 'label_id', 'user_id',
+                                                                                             'note_id')
+
+            ids = []    # list to store ids of all note_ids associated with particular label and user.
+            for i in note_list:
+                # print(i['note_id'])
+                ids.append(i['note_id'])
 
 
-        data=[]
-        for i in note_list:
-            data.append(i)
+            """ id_in  parameter checks for all the ids in list and gets  all the data of it """
+
+            data = Notes.objects.filter(id__in=ids).values('title', 'description', 'reminder', 'is_archived', 'is_deleted',
+                                                           'for_color', 'trash', 'is_pinned', 'label', 'collaborate', 'user')
+
+            paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+            page = request.GET.get('page')
+            notelist = paginator.get_page(page)
+
+            res['message'] = "All Trash Notes"
+            res['success'] = True
+            res['data'] = notelist
+            print(note_list)
+            return render(request, 'in.html', {'label_notes': data})
+
+        else:
+            messages.success(request, message=res['message'])
+            return redirect(reverse('getnotes'))
+
+    except Exception :
+        messages.success(request, message=res['message'])
+        return redirect(reverse('getnotes'))
 
 
-        d=json.dumps(data)
-        print(data)
-        print(type(d))
-        print(data[0])
-        da=[]
-        for i in data:
-            json.dumps(i)
-            print(i)
-            print(i['note_id'])
-            j=Notes.objects.filter(pk=i['note_id']).values()
-            da.append(j)
-        print("All notes for specific label")
-        print(da)
-        return HttpResponse(d)
+
+@custom_login_required
+def copy_note(request,pk):
+
+    """This method is used to copy the note
+    pk: Primary key
+    """
+
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
+    try:
+
+        if pk == None:  # if Pk is not provided.
+            messages.error('Invalid Details')
+            return redirect(reverse('getnotes'))
+
+
+        obj = Notes.objects.get(pk=pk)    # gets all the data of note by pk.
+        obj.pk = None                     # sets the pk of obj to None so django automatically generates it.
+        obj.save()          # saves the copy of note with new pk.
+
+        res['message']="Note copied"
+        messages.success(request, message=res['message'])
+        return redirect(reverse('getnotes'))
 
     except Exception as e:
-        return HttpResponse(e)
+        messages.success(request, message=res['message'])
+        return redirect(reverse('getnotes'))
