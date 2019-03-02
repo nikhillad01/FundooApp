@@ -100,9 +100,12 @@ localStorage.setItem('token', ("{{token.data}}"));
                         </button>
                        </div>
                 </div>
-                <div class="navbar-form navbar-left">
-                      <div class="form-group" style="font-family:Roboto;">
-                              <input class="form-control input-lg" id="inputlg" type="text" type="search" placeholder="        Search" aria-label="Search">
+                <div class="navbar-form navbar-left" style="padding-bottom:20px;">
+                      <div class="form-group" style="font-family:Roboto;margin-left:500px;padding-bottom:20px;">
+                                {% csrf_token %}
+
+                              <input class="form-control input-lg" id="search" name="search" type="text" type="search" placeholder="Search" aria-label="Search">
+                          <ul id="search-results"></ul>
 
                       </div>
                     <a href="{% url 'base' %}" class="btn" role="button" style="padding-left: 20px;"><span class="glyphicon glyphicon-repeat" onclick="refresh"></span></a>
@@ -484,7 +487,16 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                  {% for l in all_map %}
                     {% if l.note_id == i.id %}
-                        <span class="badge" style="margin-top: -42px;">{{l.label_id}}</span>
+                    <span class="badge" style="margin-top: -42px;">{{l.label_id}}
+
+
+
+
+
+
+
+
+                    </span>
 
                     {% endif %}
 
@@ -869,8 +881,34 @@ $(document).ready(function(){
 
 });
 </script>
+<script>
+    $(function(){
+        $('#search').keyup(function(){
+            $.ajax({
+                type:"POST",
+                url:"/search/",
+                data:{
+                    'search_text':$('#search').val(),
+                    'csrfmiddlewaretoken':$("input[name=csrfmiddlewaretoken]").val()
+                },
+                success:searchSuccess,
+                dataType:'html'
 
 
+            });
+
+
+        });
+
+
+    });
+function searchSuccess(data,testStatus,jqXHR)
+{
+    $('#search-results').html(data);
+    <!--console.log($('#search-results').html(data));-->
+
+}
+</script>
 </html>
 
 
