@@ -34,6 +34,8 @@ from rest_framework import status
 from .custom_decorators import custom_login_required
 from .models import Labels,Map_labels
 
+import datetime
+
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
 
@@ -289,17 +291,32 @@ class getnotes(View):
         """This method is used to read all the notes from database."""
         print('request user',request.user)
         try:
-            #note_list = Notes.objects.all().order_by('-created_time')   # gets all the note and sort by created time
-            note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False).values().order_by('-created_time')   # shows note only added by specific user.
+               # gets all the note and sort by created time
+            note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False,).values().order_by('-created_time')   # shows note only added by specific user.
 
             new_note_list = Notes.objects.filter(user=request.user, trash=False, is_archived=False).values('title',
-                                                                                                       'description',
+                                                                                                          'description',
                                                                                                        'is_pinned').order_by(
                 '-created_time')  # shows note only added by specific user.
+
+            items=Notes.collaborate.through.objects.filter(user_id=request.user).values()
+
+            collab=[]
+            for i in items:
+                collab.append(i['notes_id'])
+            #print('collab--------',collab)
+
+            collab_notes=Notes.objects.filter(id__in=collab).values()
+           # print("collab Notes -------------",collab_notes)
+            merged=note_list | collab_notes
+            #print('merged---------',merged)
+
+           # print('items--------------------------',items)
+
             #print('@@@@@@@@',note_list)
             labels = Labels.objects.filter(user=request.user).order_by('-created_time')
             #print(labels)
-            paginator = Paginator(note_list, 9)          # Show 9 contacts per page
+            paginator = Paginator(merged, 9)          # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
 
@@ -869,4 +886,47 @@ def search(request):
         note_list=Notes.objects.filter(title__contains=search_text)
 
         return render(request,'in.html',{"notelist":note_list})
+
+
+
+def reminder(request):
+    items = Notes.objects.filter(user_id=49).values()
+
+    #print(items)
+    dates=[]
+    for i in items:
+        #print(i['reminder'])
+        # if len(i['reminder'])>4:
+            #print(i['reminder'])
+        if i['reminder'] is not None:
+            dates.append(datetime.datetime.strptime(i['reminder'],"%Y-%m-%d"))
+
+    #print(dates)
+    j=datetime.datetime.today()
+    remind_dates=[]
+    for i in dates:
+        #print('secnd for')
+        #rint(i)
+        if (i-j).days<=2:
+         #   print('ifff')
+            remind_dates.append(i)
+
+
+           # print('matched',i)
+    new_list=[]
+    for i in remind_dates:
+        i=datetime.datetime.strftime(i,"%Y-%m-%d")
+        i=i[:10]
+        new_list.append(i)
+        #print(i)
+
+    data=Notes.objects.filter(user_id=49,reminder__in=new_list).values('title')
+    print(data)
+    json_list=[]
+    for i in data:
+        #json.dumps(i)
+        json_list.append(i)
+
+
+    return JsonResponse(json_list,safe=False)
 

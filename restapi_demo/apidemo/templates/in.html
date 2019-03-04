@@ -123,8 +123,14 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                     <a href="#" class="btn" role="button" style="padding-right: 50px;"><span class="glyphicon glyphicon-th" ></span></a>
 
-                    <a href="#" class="btn" role="button" style="padding-right:50px;"><span class="glyphicon glyphicon-bell" ></span></a>
 
+
+
+                    <a href="#" class="btn dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" role="button" style="padding-right:50px;"><span class="glyphicon glyphicon-bell" ></span></a>
+
+                        <div class="dropdown-menu pull-right" id="here" aria-labelledby="dropdownMenuButton" >
+
+                         </div>
 
 
 
@@ -875,17 +881,14 @@ function changeColor(clicked_id)
 
 <script>
 $(document).ready(function(){
-    <!--$.get("http://127.0.0.1:8000/getnotes/", function(data, status){-->
 
-      <!--console.log("data from django view");-->
 
-      <!--&lt;!&ndash;var d = <JSON class="String"></JSON>ify(data);&ndash;&gt;-->
+
+
+
 
         var token = localStorage.getItem('token');
-        <!--console.log(token);-->
-        <!--headers: {"Authorization":token}-->
-      <!--&lt;!&ndash;console.log(d);&ndash;&gt;-->
-    <!--});-->
+
 
     $.ajax({
     type: 'GET',
@@ -894,11 +897,7 @@ $(document).ready(function(){
         "Authorization":token
 
     }
-    <!--//OR-->
-    <!--//beforeSend: function(xhr) {-->
-    <!--//  xhr.setRequestHeader("My-First-Header", "first value");-->
-    <!--//  xhr.setRequestHeader("My-Second-Header", "second value");-->
-    <!--//}-->
+
 }).done(function(data) {
     <!--console.log(data);-->
 });
@@ -936,11 +935,43 @@ function searchSuccess(data,testStatus,jqXHR)
 <script type="text/javascript">
 $( document ).ready(function() {
     $('#datetimepicker1').datepicker({
+        dateFormat: "%Y-%m-%d" ,
         autoclose: true,
+        <!--dateFormat: 'dd-mm-yy',-->
         todayHighlight: true
   }).datepicker('update', new Date());
 });
     </script>
+<script>
+    $(document).ready(function(){
+        $.ajax({
+    type: 'GET',
+    url: "http://127.0.0.1:8000/reminder/",
+
+
+}).done(function(data) {
+    <!--console.log(data);-->
+    var d=data
+    console.log(d);
+     $('#ac').html(d);
+     var testList=$("<ul></ul>");
+      $(testList).append("<b>Reminders for coming two days</b>");
+    for(i=0;i<d.length;i++){
+        console.log(d[i].title);
+
+        $(testList).append($("<li></li>").text(d[i].title));
+        $('#ac').val(d[i].title);
+    }
+    $('#here').html(testList);
+   <!--$('#action-results').html(data);-->
+   <!--for()-->
+});
+
+
+
+    })
+
+</script>
 
 </html>
 
