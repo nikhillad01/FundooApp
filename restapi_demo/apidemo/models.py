@@ -33,6 +33,7 @@ class Notes(models.Model):      # Model to Create Notes.
     description = models.TextField()
     created_time = models.DateTimeField(auto_now_add=True, null=True)
     reminder = models.CharField(default=None, null=True,max_length=25)
+    #reminder = models.DateTimeField(default=None, null=True)
     is_archived = models.BooleanField(default=False)
     is_deleted = models.BooleanField(default=False)
     for_color = models.CharField(default=None, max_length=50, blank=True, null=True)

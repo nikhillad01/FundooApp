@@ -855,7 +855,7 @@ def remove_labels(request,pk,id,key,*args,**kwargs):
     note_id=id
     label_id=key
     item = Map_labels.objects.get(user_id=user_id,label_id=label_id,note_id=note_id)
-    print(item)
+    #print(item)
     item.delete()
 
     return HttpResponse("Label removed")

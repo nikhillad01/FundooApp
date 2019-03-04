@@ -6,11 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Fundoo</title>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" />
+    <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
+   <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.js">
     <script type="text/javascript" src="{% static 'JS/script.js' %}"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     <script src="{% static 'JS/cropper.min.js' %}"> </script>
-
+    <!--<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/js/bootstrap-datetimepicker.min.js"></script>-->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.3.0/js/bootstrap-datepicker.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" >
 
 
@@ -100,15 +105,17 @@ localStorage.setItem('token', ("{{token.data}}"));
                         </button>
                        </div>
                 </div>
-                <div class="navbar-form navbar-left" style="padding-bottom:20px;">
+
+
+                <div class="navbar-form navbar-left" style="margin-top:-0px;">
                       <div class="form-group" style="font-family:Roboto;margin-left:500px;padding-bottom:20px;">
                                 {% csrf_token %}
 
-                              <input class="form-control input-lg" id="search" name="search" type="text" type="search" placeholder="Search" aria-label="Search">
+                              <input class="form-control input-lg" id="search" name="search" type="text" type="search" placeholder="Search" aria-label="Search" style="margin-top:-60px;">
                           <ul id="search-results"></ul>
 
                       </div>
-                    <a href="{% url 'base' %}" class="btn" role="button" style="padding-left: 20px;"><span class="glyphicon glyphicon-repeat" onclick="refresh"></span></a>
+                    <a href="{% url 'getnotes' %}" class="btn" role="button" style="margin-left: 20px;"><span class="glyphicon glyphicon-repeat" onclick="refresh"></span></a>
 
                     <a href="#" class="btn" role="button" style="padding-left: 20px;"><span class="glyphicon glyphicon-th-large" ></span></a>
 
@@ -129,7 +136,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
      <div class="btn-group" style='float: right;'>
 
-        <button type="button" class="btn btn-circle btn-lg   " data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button type="button" class="btn btn-circle btn-lg   " data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-left:170px;margin-top:-100px;height:20px;width:20px;">
           <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" width="25" height="28">
         </button>
              <ul class="dropdown-menu dropdown-menu-right" style="font-family: Roboto;">
@@ -159,7 +166,8 @@ localStorage.setItem('token', ("{{token.data}}"));
 
      </div>
 
-                </div></div>
+                </div>
+            </div>
         </nav>
 
     <!--hr tag to print line-->
@@ -188,7 +196,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                         <span class="glyphicon glyphicon-lightbulb"></span>
                         <!--<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" ></path>-->
                         <!--</svg>-->
-                        <a href="{% url 'getnotes' %}"><span class="fa fa-home solo"><b>Notes</b></span></a>
+                        <a href="{% url 'getnotes' %}" style="margin-top:20px;"><span class="fa fa-home solo"><b>Notes</b></span></a>
                     </li>
                     <li style="margin-top: -19px;">
                         <a href="#Remainders">
@@ -301,13 +309,29 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                                     <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
                                          <label>Remainder</label>
-                                      <select name="reminder" >
-                                        <option value="" selected disabled hidden>Choose here</option>
-                                        <option value="Today">Today</option>
-                                          <option value="Tomorow">Tomorow</option>
-                                          <option value="Next Week">Next Week</option>
-                                          <option value="Next Month" selected>Next Month</option>
-                                        </select>
+                                      <!--<select name="reminder" >-->
+                                        <!--<option value="" selected disabled hidden>Choose here</option>-->
+                                        <!--<option value="Today">Today</option>-->
+                                          <!--<option value="Tomorow">Tomorow</option>-->
+                                          <!--<option value="Next Week">Next Week</option>-->
+                                          <!--<option value="Next Month" selected>Next Month</option>-->
+                                        <!--</select>-->
+
+    <div class="row">
+        <div class='col-sm-6'>
+            <div class="form-group">
+                <div class='input-group date' id='datetimepicker1'>
+                    <input type='text' class="form-control" name="reminder" id="reminder" />
+                    <span class="input-group-addon">
+                        <span class="glyphicon glyphicon-calendar"></span>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
                                       <li><a href="#"><svg height="18px" width="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="#000000">
                                        <path d="m23.99 4c-11.05 0-19.99 8.95-19.99 20s8.94 20 19.99 20c11.05 0 20.01-8.95 20.01-20s-8.96-20-20.01-20zm0.01 36c-8.84 0-16-7.16-16-16s7.16-16 16-16 16 7.16 16 16-7.16 16-16 16z"/>
                                        <path d="m0 0h48v48h-48z" fill="none"/>
@@ -876,7 +900,7 @@ $(document).ready(function(){
     <!--//  xhr.setRequestHeader("My-Second-Header", "second value");-->
     <!--//}-->
 }).done(function(data) {
-    console.log(data);
+    <!--console.log(data);-->
 });
 
 });
@@ -909,6 +933,15 @@ function searchSuccess(data,testStatus,jqXHR)
 
 }
 </script>
+<script type="text/javascript">
+$( document ).ready(function() {
+    $('#datetimepicker1').datepicker({
+        autoclose: true,
+        todayHighlight: true
+  }).datepicker('update', new Date());
+});
+    </script>
+
 </html>
 
 
