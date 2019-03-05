@@ -2,6 +2,7 @@ import json
 
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.db.models import Q
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
@@ -252,7 +253,7 @@ class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
                 'data': {},
                 'success': False
             }
-
+            print('------------',request.data['collaborate'])
             serializer = NoteSerializer(data=request.data)  # takes the data from form.
             # check serialized data is valid or not
 
@@ -296,7 +297,7 @@ class getnotes(View):
 
             new_note_list = Notes.objects.filter(user=request.user, trash=False, is_archived=False).values('title',
                                                                                                           'description',
-                                                                                                       'is_pinned').order_by(
+                                                                                                       'is_pinned','collaborate').order_by(
                 '-created_time')  # shows note only added by specific user.
 
             items=Notes.collaborate.through.objects.filter(user_id=request.user).values()
@@ -314,6 +315,7 @@ class getnotes(View):
            # print('items--------------------------',items)
 
             #print('@@@@@@@@',note_list)
+
             labels = Labels.objects.filter(user=request.user).order_by('-created_time')
             #print(labels)
             paginator = Paginator(merged, 9)          # Show 9 contacts per page
@@ -335,9 +337,11 @@ class getnotes(View):
 
             all_labels=Labels.objects.all()
             all_map=Map_labels.objects.all()
-
+            #all_users = User.objects.values_list('username', flat=True)
+            all_users=User.objects.filter().values('username','id')
+            #print('----------',all_users)
             #return JsonResponse(d,safe=False)
-            return render(request, 'in.html', {'notelist': notelist,'labels':labels,'all_labels':all_labels,'all_map':all_map})
+            return render(request, 'in.html', {'notelist': notelist,'labels':labels,'all_labels':all_labels,'all_map':all_map,'all_users':all_users})
 
         except Exception as e:
             print(e)
@@ -866,67 +870,145 @@ def copy_note(request,pk):
 
 
 
+@custom_login_required
 def remove_labels(request,pk,id,key,*args,**kwargs):
 
-    user_id=pk
-    note_id=id
-    label_id=key
-    item = Map_labels.objects.get(user_id=user_id,label_id=label_id,note_id=note_id)
-    #print(item)
-    item.delete()
+    """This method is used to remove the label from particular note"""
 
-    return HttpResponse("Label removed")
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
+    try:
+        if pk and id and key :
+
+            user_id=pk
+            note_id=id
+            label_id=key
+            item = Map_labels.objects.get(user_id=user_id,label_id=label_id,note_id=note_id)
+
+            item.delete()
 
 
 
+            return redirect(reverse('getnotes'))
+
+    except Exception:
+        messages.success(request, message=res['message'])
+        return redirect(reverse('getnotes'))
+
+
+@custom_login_required
 def search(request):
-    if request.method=='POST':
-        search_text = request.POST['search_text']
+    try:
+        res = {
+            'message': 'No result found',  # Response Data
+            'data': {},
+            'success': False
+        }
+        if request.method=='POST':
+            search_text = request.POST['search_text']
 
-        note_list=Notes.objects.filter(title__contains=search_text)
+            note_list=Notes.objects.filter(Q(title__contains=search_text)|Q(description__contains=search_text))
 
-        return render(request,'in.html',{"notelist":note_list})
+            if note_list:
+
+                paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+                page = request.GET.get('page')
+                notelist = paginator.get_page(page)
+
+                res['message'] = "Search Notes"
+                res['success'] = True
+                res['data'] = notelist
+                #print(note_list)
+                return render(request, 'in.html', {'notelist': note_list})
+            else:
+                messages.error(request, message=res['message'])
+
+
+    except Exception as e:
+         print(res)
 
 
 
+
+@custom_login_required
 def reminder(request):
-    items = Notes.objects.filter(user_id=49).values()
 
-    #print(items)
-    dates=[]
-    for i in items:
-        #print(i['reminder'])
-        # if len(i['reminder'])>4:
-            #print(i['reminder'])
-        if i['reminder'] is not None:
-            dates.append(datetime.datetime.strptime(i['reminder'],"%Y-%m-%d"))
+    """ This method is used to show reminders to user """
 
-    #print(dates)
-    j=datetime.datetime.today()
-    remind_dates=[]
-    for i in dates:
-        #print('secnd for')
-        #rint(i)
-        if (i-j).days<=2:
-         #   print('ifff')
-            remind_dates.append(i)
+    res = {
+        'message': 'No result found',  # Response Data
+        'data': {},
+        'success': False
+    }
 
+    try:
+        if request.user:
+            # if request made from User.
+            items = Notes.objects.filter(user=request.user).values()    # Gets all notes  for particular user.
 
-           # print('matched',i)
-    new_list=[]
-    for i in remind_dates:
-        i=datetime.datetime.strftime(i,"%Y-%m-%d")
-        i=i[:10]
-        new_list.append(i)
-        #print(i)
-
-    data=Notes.objects.filter(user_id=49,reminder__in=new_list).values('title')
-    print(data)
-    json_list=[]
-    for i in data:
-        #json.dumps(i)
-        json_list.append(i)
+            dates=[]    # list to store only dates of every Note.
+            for i in items:
+                if i['reminder']:               # if reminder column has some value
+                                                # convert and append the date to the list
+                    dates.append(datetime.datetime.strptime(i['reminder'],"%Y-%m-%d"))
 
 
-    return JsonResponse(json_list,safe=False)
+            j=datetime.datetime.today()         # stores today's date
 
+            remind_dates=[]                     # list to store the dates for which reminder is in two days.
+            for i in dates:
+                if (i-j).days<=2:               # calculates the difference and stores the value to list
+                    remind_dates.append(i)
+
+            new_list=[]                          # list elements has some unwanted values and in Str format
+            for i in remind_dates:
+                i=datetime.datetime.strftime(i, "%Y-%m-%d")
+                i=i[:10]                         # convert and slice to remove unwanted details
+                new_list.append(i)
+
+            data=Notes.objects.filter(user=request.user,reminder__in=new_list).values('title','reminder')
+
+            json_list=[]                         # get all notes with reminder
+            # QuerySet to JSON
+
+            for i in data:
+                json_list.append(i)
+
+            return JsonResponse(json_list,safe=False)
+
+        else:
+            messages.error(request, message=res['message'])
+            return render(request, 'in.html', {})
+
+
+    except Exception:
+        messages.error(request, message=res['message'])
+        return render(request,'in.html', {})
+
+
+
+def change_color(request,pk):
+    item=Notes.objects.get(id=pk)
+
+
+class Update(UpdateAPIView):
+    serializer_class = NoteSerializer
+    queryset = Notes.objects.all()
+
+    def post(self,request,pk):
+        #serializer=Notes.objects.get()
+        item = Notes.objects.get(id=pk)
+        collaborate=request.data['collaborate']
+        print('-----------',collaborate)
+        print('-----------',item)
+
+        user= User.objects.get(id=collaborate)
+        item.collaborate.add(user)
+        item.save()
+        # if serializer.is_valid():
+        #     serializer.save()
+        return HttpResponse("Updated")

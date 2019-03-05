@@ -55,12 +55,8 @@ localStorage.setItem('token', ("{{token.data}}"));
  var value = localStorage.getItem('token');
  console.log(value)
 
- <!--$http.get({-->
-    <!--headers: {'Authorization': value}-->
-<!--});-->
-    <!--xhr.setRequestHeader("Authorization", value));-->
-    $http({method: 'GET', headers: {'Authorization': value}
-});
+
+
 </script>
 
 <style>
@@ -135,12 +131,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
 
-
-
-
-
-
-     <div class="btn-group" style='float: right;'>
+     <div class="btn btn-circle btn-xl" style="margin-left: 1000px;margin-top:-55px;" >
 
         <button type="button" class="btn btn-circle btn-lg   " data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-left:170px;margin-top:-100px;height:20px;width:20px;">
           <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" width="25" height="28">
@@ -179,6 +170,7 @@ localStorage.setItem('token', ("{{token.data}}"));
     <!--hr tag to print line-->
 
         <div class="sep">
+
         <hr id="divider"><div class="sepText"></div>
         </div>
 {% if messages %}
@@ -196,14 +188,16 @@ localStorage.setItem('token', ("{{token.data}}"));
      <div id="sidebar-wrapper" style="font-family:Roboto;">
             <nav id="spy">
                 <ul class="sidebar-nav nav">
-                    <li style="margin-top: -16px;" >
-                        <!--<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"  class="gb_Uc" style="margin-bottom: -55px;margin-top: -10px;">-->
-                      <!--<img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4KICA8cGF0aCBkPSJNOSAyMWMwIC41NS40NSAxIDEgMWg0Yy41NSAwIDEtLjQ1IDEtMXYtMUg5djF6bTMtMTlDOC4xNCAyIDUgNS4xNCA1IDljMCAyLjM4IDEuMTkgNC40NyAzIDUuNzRWMTdjMCAuNTUuNDUgMSAxIDFoNmMuNTUgMCAxLS40NSAxLTF2LTIuMjZjMS44MS0xLjI3IDMtMy4zNiAzLTUuNzQgMC0zLjg2LTMuMTQtNy03LTd6bTIuODUgMTEuMWwtLjg1LjZWMTZoLTR2LTIuM2wtLjg1LS42QTQuOTk3IDQuOTk3IDAgMCAxIDcgOWMwLTIuNzYgMi4yNC01IDUtNXM1IDIuMjQgNSA1YzAgMS42My0uOCAzLjE2LTIuMTUgNC4xeiIvPgo8L3N2Zz4K" />-->
-                        <span class="glyphicon glyphicon-lightbulb"></span>
-                        <!--<path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6A4.997 4.997 0 0 1 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z" ></path>-->
-                        <!--</svg>-->
-                        <a href="{% url 'getnotes' %}" style="margin-top:20px;"><span class="fa fa-home solo"><b>Notes</b></span></a>
+
+                    <li style="margin-top: 5px;" >
+                        <span class="glyphicon glyphicon-light-bulb"></span>
+                        <a href="{% url 'getnotes' %}" style="margin-top:20px;">
+                            <span class="glyphicon glyphicon-book"></span>
+                            <span class="fa fa-home solo"><b>Notes</b></span>
+                        </a>
                     </li>
+
+
                     <li style="margin-top: -19px;">
                         <a href="#Remainders">
                             <span  class="glyphicon glyphicon-bell"></span>
@@ -323,19 +317,19 @@ localStorage.setItem('token', ("{{token.data}}"));
                                           <!--<option value="Next Month" selected>Next Month</option>-->
                                         <!--</select>-->
 
-    <div class="row">
-        <div class='col-sm-6'>
-            <div class="form-group">
-                <div class='input-group date' id='datetimepicker1'>
-                    <input type='text' class="form-control" name="reminder" id="reminder" />
-                    <span class="input-group-addon">
-                        <span class="glyphicon glyphicon-calendar"></span>
-                    </span>
-                </div>
-            </div>
-        </div>
+                                <div class="row">
+                                    <div class='col-sm-6'>
+                                        <div class="form-group">
+                                            <div class='input-group date' id='datetimepicker1'>
+                                                <input type='text' class="form-control" name="reminder" id="reminder" />
+                                                <span class="input-group-addon">
+                                                    <span class="glyphicon glyphicon-calendar"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
 
-    </div>
+                                </div>
 
 
                                       <li><a href="#"><svg height="18px" width="18px" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="#000000">
@@ -350,10 +344,22 @@ localStorage.setItem('token', ("{{token.data}}"));
                                  </div>
 
                                 <!--colabrator-->
-                                 <div role="button" class="btn " style="margin: -20px;margin-top: -100px;margin-left: 48px;" aria-label="Collaborator">
+
+                                 <div role="button" class="btn  dropdown" style="margin: -20px;margin-top: -45px;margin-left: 48px;" aria-label="Collaborator" >
+                                     <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;">
                                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="Collaborator">
                                      <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
-                                     </svg>
+                                     </svg></button>
+                                     <ul class="dropdown-menu">
+
+                                         <select name="collaborate" multiple>
+                                             {% for a_user in all_users %}
+                                             <option value={{a_user.id}}>{{a_user.username}}</option>
+
+                                             {% endfor %}
+
+                                        </select>
+                                     </ul>
                                  </div>
 
                                     <!--color-->
@@ -434,8 +440,9 @@ localStorage.setItem('token', ("{{token.data}}"));
 <div class="card-columns">
 
     {% for i in notelist %}
-    <div class='col-md-12'>
-         <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:220px;width:200px;">
+
+    <div >
+         <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:240px;width:210px;">
              <div href="#" data-toggle="modal" data-target="#myModal" id="page-button i" style="background-color:{{i.color}};" >
              <div class="card-content" >
                   <h3 id="text_box" data-model-name="text_box"  value={{i.title}}>{{i.title }}</h3>
@@ -444,15 +451,15 @@ localStorage.setItem('token', ("{{token.data}}"));
                  <!--suspected div   -->
 
 
-                     <div  class="dropdown" style="padding-right:100px;">
-                        <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;padding-right:100px;">
+                     <div  class="dropdown" >
+                        <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 5px;font-family:Roboto;margin-right:100px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="remainder">
                                          <path d="M13 9h-2v2H9v2h2v2h2v-2h2v-2h-2z"/>
                                          <path d="M18 17v-6c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v6H4v2h16v-2h-2zm-2 0H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6zm-4 5c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"/>
                                      </svg>
                                      </button>
 
-                                    <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" padding-right:50px; margin-top: -22px;">
+                                    <ul class="dropdown-menu" aria-labelledby="remainderMenu1" >
                                          <label>Remainder</label>
                                       <select name="reminder" >
                                         <option value="" selected disabled hidden>Choose here</option>
@@ -461,18 +468,38 @@ localStorage.setItem('token', ("{{token.data}}"));
                                           <option value="Next Week">Next Week</option>
                                           <option value="Next Month" selected>Next Month</option>
                                         </select>
-                                      <li><a href="#">
 
-                                      </a>
-                                      </li>
                                      </ul>
                      </div>
+
+
+
+
                                <!--colabrator-->
-                                 <div role="button" class="btn " style="margin: -20px;margin-top: -100px;margin-left: 48px;" aria-label="Collaborator">
+                                 <div role="button" class="btn  dropdown" style="margin: -20px;margin-top: -45px;margin-left: 48px;" aria-label="Collaborator" >
+                                     <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;">
                                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="Collaborator">
                                      <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
-                                     </svg>
+                                     </svg></button>
+
+                                     <ul class="dropdown-menu">
+                                        <form method="post" action="{% url 'Update' i.id%}">
+                                         <select name="collaborate" id="collaborate" multiple>
+                                             {% for a_user in all_users %}
+                                             <option value={{a_user.id}}>{{a_user.username}}</option>
+
+                                             {% endfor %}
+
+                                        </select>
+                                             <button type="submit">submit</button></form>
+                                     </ul>
+
                                  </div>
+
+
+
+
+
                                   <!--color-->
                                <div class="dropdown" name=clicked_id id=clicked_id>
                                        <button class="btn btn-default dropdown-toggle" type="button" id="color-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
@@ -509,7 +536,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                                              <!--Archive-->
 
                                 <div >
-                                     <a href="{% url 'is_archived' i.id %}" role="button"   class="btn" style="margin-left:50px;" >
+                                     <a href="{% url 'is_archived' i.id %}" role="button"   class="btn" style="margin-left:90px;margin-top:-150px;" >
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="archive">
                                                     <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5l-4 4-4-4 1.41-1.41L11 13.67V10h2v3.67l1.59-1.59L16 13.5z"></path>
                                                     </svg></a>
@@ -533,7 +560,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                  {% endfor %}
                   <!--More Options-->
-                 <div class="dropdown  show dropleft" style="width:80px;top:-30px;" >
+                 <div class="dropdown  show dropleft" style="width:20px;top:-30px;" >
                         <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="padding-left:240px;width:20px;">
                             <span class="glyphicon glyphicon-option-vertical" style="padding-left:130px;width:20px;top:-17px"></span>
                           </a>
@@ -566,37 +593,9 @@ localStorage.setItem('token', ("{{token.data}}"));
     {% endfor %}
 
 
-
-<!--For notes Labelssssssssssssssss-->
-<!--labels-->
-
-        <!--Prints all the Notes-->
-
-
-
-
-
-
-
-<script>
-$(document).ready(function(){
-  $('.dropdown-submenu a.test').on("click", function(e){
-    $(this).next('ul').toggle();
-    e.stopPropagation();
-    e.preventDefault();
-  });
-});
-</script>
                     <!--Ending Note For Loop -->
 
-
-
-
-
-
-
                         <!--Pagination-->
-
 <center>
 
 <div class="pagination">
@@ -696,40 +695,23 @@ $(document).ready(function(){
               </div>
 
 </div>
-<center>
-<!--{% for i in lab|safe %}-->
-
-<!--{% endfor %}-->
-    <!--{{lab | safe}}-->
-
-
-</center>
-
-
-
-
-
-
-
-
-
-
 
 <center>
-<center class="card-columns">
+<center class="card-columns col-md-10">
 
     {% for i in label_notes %}
     <div class='col-md-12'>
-         <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:220px;width:200px;">
+         <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:220px;width:220px;">
              <div href="#" data-toggle="modal" data-target="#myModal" id="page-button i" style="background-color:{{i.color}};" >
              <div class="card-content" >
                   <h3 id="text_box" data-model-name="text_box"  value={{i.title}}>{{i.title }}</h3>
-                  <p id="text_area" data-model-name="text_area" value={{i.description}}>{{i.description}}</p>
+                 <br><br>
+                  <p  id="text_area" data-model-name="text_area" value={{i.description}}>{{i.description}}</p>
 
                  <!--suspected div   -->
 
 
-                     <div  class="dropdown" style="padding-right:100px;">
+                     <div  class="dropdown" style="margin-right:100px;">
                         <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;padding-right:100px;">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="remainder">
                                          <path d="M13 9h-2v2H9v2h2v2h2v-2h2v-2h-2z"/>
@@ -737,23 +719,20 @@ $(document).ready(function(){
                                      </svg>
                                      </button>
 
-                                    <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" padding-right:50px; margin-top: -22px;">
+                                    <ul class="dropdown-menu dropleft" aria-labelledby="remainderMenu1" style=" padding-right:50px; margin-top: -22px;">
                                          <label>Remainder</label>
                                       <select name="reminder" >
-                                        <option value="" selected disabled hidden>Choose here</option>
-                                        <option value="Today">Today</option>
-                                          <option value="Tomorow">Tomorow</option>
-                                          <option value="Next Week">Next Week</option>
-                                          <option value="Next Month" selected>Next Month</option>
-                                        </select>
-                                      <li><a href="#">
 
-                                      </a>
-                                      </li>
+                                        <option value="Today">adsad</option>
+                                          <option value="Tomorow">Tomoasdasdrow</option>
+                                          <option value="Next Week">Nexadasdt Week</option>
+                                          <option value="Next Month" selected>Next ssMonth</option>
+                                        </select>
+
                                      </ul>
                      </div>
                                <!--colabrator-->
-                                 <div role="button" class="btn " style="margin: -20px;margin-top: -100px;margin-left: 48px;" aria-label="Collaborator">
+                                 <div role="button" class="btn " style="margin-top: -73px;" aria-label="Collaborator">
                                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="Collaborator">
                                      <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
                                      </svg>
@@ -766,6 +745,8 @@ $(document).ready(function(){
                                            <circle cx="9.5" cy="7.5" r="1.5"/><circle cx="14.5" cy="7.5" r="1.5"/><circle cx="17.5" cy="11.5" r="1.5"/>
                                         </svg>
                                     </button>
+
+
                                        <!--colors in dropdown-->
                                     <ul class="dropdown-menu" aria-labelledby="color-menu" style=" margin-left: 114px; margin-top: -22px;" >
                                          <div class="row1">
@@ -793,7 +774,7 @@ $(document).ready(function(){
 
                                              <!--Archive-->
 
-                                <div >
+                                <div style="margin-top:-80px;margin-left:160px;" >
 
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="archive">
                                                     <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5l-4 4-4-4 1.41-1.41L11 13.67V10h2v3.67l1.59-1.59L16 13.5z"></path>
@@ -809,9 +790,9 @@ $(document).ready(function(){
 
                  {% endfor %}
                   <!--More Options-->
-                 <div class="dropdown  show dropleft" style="width:80px;top:-30px;" >
-                        <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="padding-left:240px;width:20px;">
-                            <span class="glyphicon glyphicon-option-vertical" style="padding-left:130px;width:20px;top:-17px"></span>
+                 <div class="dropdown  show dropleft" style="width:5px;margin-top:10px;margin-right:110px;" >
+                        <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="margin-left:145px;margin-top:10px;">
+                            <span class="glyphicon glyphicon-option-vertical" style="margin-left:130px;width:5px;margin-top:-40px"></span>
                           </a>
                             <ul class="dropdown-menu dropleft">
 
@@ -837,29 +818,45 @@ $(document).ready(function(){
 
     {% endfor %}
 </center>
-
-
-
-
-
-
-
-
 </body>
+
+
+
+<script>
+$(document).ready(function(){
+
+  $('.dropdown-submenu a.test').on("click", function(e){
+    $(this).next('ul').toggle();
+    e.stopPropagation();
+    e.preventDefault();
+    console.log("toggle");
+  });
+});
+</script>
+
+<script>
+$(document).ready(function(){
+
+  $('#menu-toggle').on("click", function(e){
+    $(this).next('ul').toggle();
+    e.stopPropagation();
+    e.preventDefault();
+    console.log("toggle");
+  });
+});
+</script>
+
 <script>
 $("article").click(function(){
-  <!--alert(this.id,this.textbox);-->
-  <!--console.log(this.id);-->
+
   var id = this.id;
   $('#modal-text').val(id).text();
   $('#form').attr('s',id);
   console.log(id);
   $('#pk_note').val(id).text();
-
-  <!--console.log(this.text_box);-->
-  <!--console.log($(#text_box).val());-->
 });
 </script>
+
 <script type="text/javascript">
 function changeColor(clicked_id)
 {
@@ -868,11 +865,9 @@ function changeColor(clicked_id)
     $('#add_note').css('background-color', clicked_id);
     $('#title').css('background-color', clicked_id);
     $('#description').css('background-color', clicked_id);
+    <!--console.log(color_id);-->
+    $('#for_color').val(clicked_id);
 
-    console.log(color_id);
-
-     $('#for_color').val(clicked_id);
-    <!--alert(clicked_id);-->
 }
 </script>
 
@@ -881,29 +876,19 @@ function changeColor(clicked_id)
 
 <script>
 $(document).ready(function(){
-
-
-
-
-
-
         var token = localStorage.getItem('token');
-
-
     $.ajax({
     type: 'GET',
     url: "http://127.0.0.1:8000/getnotes/",
     headers: {
         "Authorization":token
-
     }
-
 }).done(function(data) {
     <!--console.log(data);-->
 });
-
 });
 </script>
+
 <script>
     $(function(){
         $('#search').keyup(function(){
@@ -932,16 +917,17 @@ function searchSuccess(data,testStatus,jqXHR)
 
 }
 </script>
+
 <script type="text/javascript">
 $( document ).ready(function() {
     $('#datetimepicker1').datepicker({
-        dateFormat: "%Y-%m-%d" ,
+        dateFormat: 'yy-mm-dd' ,
         autoclose: true,
-        <!--dateFormat: 'dd-mm-yy',-->
         todayHighlight: true
   }).datepicker('update', new Date());
 });
-    </script>
+</script>
+
 <script>
     $(document).ready(function(){
         $.ajax({
