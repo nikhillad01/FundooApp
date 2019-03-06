@@ -1,8 +1,6 @@
 import json
-
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
@@ -34,6 +32,8 @@ from .serializers import NoteSerializer
 from rest_framework import status
 from .custom_decorators import custom_login_required
 from .models import Labels,Map_labels
+from django.db.models import Q
+
 
 import datetime
 
@@ -277,10 +277,10 @@ class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
 class getnotes(View):
 
     def get(self, request):
-        # print(request.META)
+
 
         print('aUTH @!!@!@!@!@ ',request.META.get('HTTP_AUTHORIZATION'))
-       # print('Authorization',authorization)
+
         #""" This method is used to read all notes """
 
         res = {
@@ -290,7 +290,7 @@ class getnotes(View):
         }
 
         """This method is used to read all the notes from database."""
-        print('request user',request.user)
+
         try:
                # gets all the note and sort by created time
             note_list = Notes.objects.filter(user=request.user,trash=False,is_archived=False,).values().order_by('-created_time')   # shows note only added by specific user.
@@ -308,16 +308,12 @@ class getnotes(View):
             #print('collab--------',collab)
 
             collab_notes=Notes.objects.filter(id__in=collab).values()
-           # print("collab Notes -------------",collab_notes)
+
             merged=note_list | collab_notes
-            #print('merged---------',merged)
 
-           # print('items--------------------------',items)
-
-            #print('@@@@@@@@',note_list)
 
             labels = Labels.objects.filter(user=request.user).order_by('-created_time')
-            #print(labels)
+
             paginator = Paginator(merged, 9)          # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
@@ -326,21 +322,23 @@ class getnotes(View):
             res['success'] = True
             res['data'] =notelist
 
-            #print(note_list)
+
             data=[]
             for i in new_note_list:
                 data.append(i)
-            print(type(data))
-           # print(data)
+
             d=data
-            print(d)
+
 
             all_labels=Labels.objects.all()
             all_map=Map_labels.objects.all()
-            #all_users = User.objects.values_list('username', flat=True)
-            all_users=User.objects.filter().values('username','id')
-            #print('----------',all_users)
-            #return JsonResponse(d,safe=False)
+
+            all_users=User.objects.filter(~Q(username=request.user.username)).values('username','id')
+               # returns list of all user except the one who is requesting it .
+
+
+
+
             return render(request, 'in.html', {'notelist': notelist,'labels':labels,'all_labels':all_labels,'all_map':all_map,'all_users':all_users})
 
         except Exception as e:
@@ -721,7 +719,7 @@ def add_labels(request,pk):
         return HttpResponse(res,e)
 
 @custom_login_required
-def map_labels(request,pk,id,key, *args ,**kwargs):
+def map_labels(request, *args ,**kwargs):
 
     """This method is used to map labels with each notes """
 
@@ -730,9 +728,13 @@ def map_labels(request,pk,id,key, *args ,**kwargs):
         'data': {},
         'success': False
     }
-    label_id=pk
-    user=id
-    note_id=key
+
+    label_id=request.POST['pk']
+    user=request.POST['id']
+    note_id=request.POST['key']
+    # label_id=pk
+    # user=id
+    # note_id=key
     # if request.POST['label_id'] or request.POST['user'] or request.POST['note']==None:
     #     messages.error('Invalid Details')
     #     return redirect(reverse('getnotes'))
@@ -740,9 +742,9 @@ def map_labels(request,pk,id,key, *args ,**kwargs):
     # label_id=request.POST['label_id']
     # user=request.POST['user']
     # note=request.POST['note']
-    print(label_id)
-    print(user)
-    print(note_id)
+    print('------------',label_id)
+    print('------------',user)
+    print('------------',note_id)
     try:
         map=Map_labels.objects.create(label_id=Labels.objects.get(id=label_id),user=User.objects.get(id=user),note=Notes.objects.get(id=note_id))
         map.save()
@@ -991,24 +993,108 @@ def reminder(request):
 
 
 
-def change_color(request,pk):
-    item=Notes.objects.get(id=pk)
 
 
 class Update(UpdateAPIView):
-    serializer_class = NoteSerializer
-    queryset = Notes.objects.all()
+    try:
 
-    def post(self,request,pk):
-        #serializer=Notes.objects.get()
-        item = Notes.objects.get(id=pk)
-        collaborate=request.data['collaborate']
-        print('-----------',collaborate)
-        print('-----------',item)
 
-        user= User.objects.get(id=collaborate)
-        item.collaborate.add(user)
-        item.save()
-        # if serializer.is_valid():
-        #     serializer.save()
-        return HttpResponse("Updated")
+        serializer_class = NoteSerializer
+       # queryset = Notes.objects.all()
+    except Exception as e:
+        print(e)
+
+    def post(self, request, pk):
+        try:
+            res = {
+                'message': 'No result found',  # Response Data
+                'data': {},
+                'success': False
+            }
+            item = Notes.objects.get(id=pk)
+
+            collaborate = request.data['collaborate']
+
+            user = User.objects.get(id=collaborate)
+            item.collaborate.add(user)
+            item.save()
+            res['message']="Collabrator added successfully"
+            messages.success(request, message=res['message'])
+            return redirect(reverse('getnotes'))
+
+        except Exception:
+            messages.error(request, message=res['message'])
+            return render(request, 'in.html', {})
+
+
+
+class View_reminder(View):
+
+    """This method is used to display all the notes which has reminder
+    """
+    res = {
+        'message': 'Something bad happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+
+    def get(self, request):
+
+        """ Reads the notes by user and archived field"""
+
+        res = {
+            'message': 'Something bad happened',
+            'data': {},
+            'success': False
+        }
+
+        """This method is used to read all the notes from database."""
+
+        try:
+                  # gets all the note and sort by created time
+            note_list = Notes.objects.filter(~Q(reminder=None),user=request.user).values().order_by('-created_time')  # shows note only added by specific user.
+
+            paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+            page = request.GET.get('page')
+            notelist = paginator.get_page(page)
+
+            res['message'] = "All Trash Notes"
+            res['success'] = True
+            res['data'] = notelist
+            print(note_list)
+            return render(request, 'in.html', {'notelist': note_list})
+
+        except Exception as e:
+            print(res)
+
+
+def change_color(request,pk):
+
+    try:
+        res = {
+            'message': 'No result found',  # Response Data
+            'data': {},
+            'success': False
+        }
+        if pk and request.POST['change_color']:
+
+            item = Notes.objects.get(id=pk)
+
+            new_color = request.POST['change_color']
+
+            item.for_color=new_color
+            item.save()
+            res['message'] = "color changed"
+            #messages.success(request, message=res['message'])
+            return redirect(reverse('getnotes'))
+
+        else:
+            print('No Valid details given')
+            return redirect(reverse('getnotes'))
+
+
+    except Exception:
+        messages.error(request, message=res['message'])
+        return render(request, 'in.html', {})
+
+#  <!--<li>   <a href="{% url 'map_labels' k.id user.id i.id %}" style="padding-left:100px;" >{{k}}</a></li>-->
