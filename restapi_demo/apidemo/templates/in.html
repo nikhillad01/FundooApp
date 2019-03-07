@@ -351,7 +351,9 @@ localStorage.setItem('token', ("{{token.data}}"));
                                      <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
                                      </svg></button>
                                      <ul class="dropdown-menu">
+                                        <h4><span class="label label-default">Collabrators</span></h4>
 
+                                         owner : {{ user.username }}<br>
                                          <select name="collaborate" multiple>
                                              {% for a_user in all_users %}
                                              <option value={{a_user.id}}>{{a_user.username}}</option>
@@ -929,13 +931,14 @@ function changeColor(clicked_id)
 
 <script>
 $(document).ready(function(){
-        var token = localStorage.getItem('token');
+    var token = localStorage.getItem('token');
     $.ajax({
     type: 'GET',
     url: "http://127.0.0.1:8000/getnotes/",
     headers: {
         "Authorization":token
     }
+
 }).done(function(data) {
     <!--console.log(data);-->
 });
@@ -1010,7 +1013,7 @@ $( document ).ready(function() {
     function addLabel(element,i_id,k_id,user_id)
                     {
                       <!--var label = $("input[name='labels']:checked").val()-->
-
+                        var token = localStorage.getItem('token');
                        var pk =k_id
                        var id = user_id
                        var key = i_id
@@ -1026,9 +1029,12 @@ $( document ).ready(function() {
                       console.log("inside check IF");
 
                       $.ajax({
+
                             type: 'POST',
                             url: "http://127.0.0.1:8000/map_labels/",
+
                             data: {
+
                                 'pk':pk,
                                 'id':user_id,
                                 'key':i_id,

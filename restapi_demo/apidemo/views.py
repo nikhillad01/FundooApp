@@ -241,8 +241,6 @@ def demo(request):
     return render(request,'demo.html',{})
 
 
-
-
 # API to create note
 #@login_required
 class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
@@ -723,7 +721,7 @@ def add_labels(request,pk):
 def map_labels(request, *args ,**kwargs):
 
     """This method is used to map labels with each notes """
-
+    print('In Map Labels @!!@!@!@!@ ', request.META.get('HTTP_AUTHORIZATION'))
     res = {
         'message': 'Something bad happened',  # Response Data
         'data': {},
@@ -1046,7 +1044,8 @@ class View_reminder(View):
         'data': {},
         'success': False
     }
-    @custom_login_required
+
+
     def get(self, request):
 
         """ Reads the notes by user and archived field"""
