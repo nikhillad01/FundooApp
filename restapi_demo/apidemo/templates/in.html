@@ -92,7 +92,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                         </a>
                         <i class="fa fa-bars"></i>
                         </a>
-                        <a style="padding-right: 1200px ;color: #635f5f;font-size: 20px;font-family: Roboto;" href="#">Fundoo </a>
+                        <a style="margin-right:1300px;color: #635f5f;font-size: 20px;font-family: Roboto;" href="#">Fundoo</a>
                         <button class="search-btn" aria-label="Search" role="button" id="searchicon">
                               <svg focusable="false" height="24px" viewBox="0 0 24 24" width="24px" xmlns="http://www.w3.org/2000/svg">
                                   <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
@@ -113,11 +113,11 @@ localStorage.setItem('token', ("{{token.data}}"));
                       </div>
                     <a href="{% url 'getnotes' %}" class="btn" role="button" style="margin-left: 20px;" data-toggle="tooltip" data-placement="bottom" title="Refresh"><span class="glyphicon glyphicon-repeat" onclick="refresh"></span></a>
 
-                    <a href="#" class="btn" role="button" style="padding-left: 20px;"><span class="glyphicon glyphicon-th-large" ></span></a>
+                    <a href="#" class="btn" role="button" style="padding-left: 20px;" id="grid_list"><span class="glyphicon glyphicon-th-large" ></span></a>
 
-                    <a href="#" class="btn" role="button" style="padding-left: 20px;"><span class="glyphicon glyphicon-cog" ></span></a>
+                    <a href="#" class="btn" role="button" style="padding-left: 20px;" ><span class="glyphicon glyphicon-cog" ></span></a>
 
-                    <a href="#" class="btn" role="button" style="padding-right: 50px;"><span class="glyphicon glyphicon-th" ></span></a>
+                    <a href="#" class="btn" role="button" style="padding-right: 50px;" id="col3_btn"><span class="glyphicon glyphicon-th" ></span></a>
 
 
 
@@ -437,7 +437,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
         <!--Prints all the Notes-->
 
-<div class="card-columns">
+<div class="card-columns ">
 
     {% for i in notelist %}
 
@@ -826,10 +826,14 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
 </div>
-            </article> </div>
+            </article>
+    </div>
 
     {% endfor %}
 </center>
+    <!--<div style="width">-->
+  <!--<input type="text" style= "width:500px;" placeholder="Take a note...">-->
+    <!--<div role="button" class="Q0hgme-LgbsSe Q0hgme-Bz112c-LgbsSe RmniWd-rymPhb VIpgJd-LgbsSe" aria-label="New list" aria-disabled="false" style="user-select: none;" tabindex="0"></div>-->
 </body>
 
 
@@ -1042,6 +1046,36 @@ $( document ).ready(function() {
 $(document).ready(function(){
     $('[data-toggle="tooltip"]').tooltip();
 });
+</script>
+<script>
+    $(document).ready(function(){
+
+   $('#col3_btn').click(function () {
+                  $(".card-columns").css("column-count", "3");
+
+                 <!--for Chrome, Safari, Opera -->
+                  $(".card-columns").css( "webkit-column-gap", "90px");
+
+                   <!--for Mozilla-->
+                  $(".card-columns").css( "moz-column-gap", "90px");
+
+
+
+                  $("#col3_btn").hide();
+                  $("#grid_list").show();
+
+   });
+   $('#grid_list').click(function () {
+               $(".card-columns").css("column-count", "1");
+               $("article" ).css("width", "150%");
+
+               $("#col3_btn").show();
+               $("#grid_list").hide();
+   });
+
+});
+
+
 </script>
 </html>
 

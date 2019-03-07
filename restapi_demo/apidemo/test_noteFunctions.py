@@ -10,16 +10,7 @@ factory = APIRequestFactory()
 #pytestmark = pytest.mark.django_db
 class Test_Note_Model:
     def test_save(self):
-            # add_note = Notes.objects.create(
-            #     title="PyTest_checking_note_create",
-            #     description="py_description",
-            #     is_archived=False,
-            #     trash=False
-            # )
-            # assert add_note.title == "PyTest_checking_note_create"
-            # assert add_note.description =="py_description"
-            # assert add_note.is_archived == False
-            # assert add_note.trash == False
+
             data= {"title":"PyTest_checking_note_create",
                 "description":"py_description",
                 "is_archived":False,

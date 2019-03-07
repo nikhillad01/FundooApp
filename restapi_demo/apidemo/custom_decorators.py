@@ -9,8 +9,8 @@ def custom_login_required(function=None,login_url =''):
     try:
         def is_login(u):
             print('this is user',u)
-            return User.objects.filter(username=u).exists()
-        actual_decorator = user_passes_test(is_login)
+            return User.objects.filter(username=u).exists()     # if user is present in DB.
+        actual_decorator = user_passes_test(is_login)           # user_passes_test to check if some test passes or not
         if function:
             return actual_decorator(function)
         else:

@@ -476,17 +476,10 @@ def updateNotes(request,pk):
 
         title=request.POST.get('title')
         description = request.POST.get('description')
-        # ctime = request.POST.get('ctime')
-        # remainder = request.POST.get('remainder')
-        # colla = request.POST.get('colla')
-
                               # changing data of note with form data.
-
         note.title=title
         note.description=description
-        # note.created_time=ctime
-        # note.remainder=remainder
-        #note.collaborate=colla
+
         note.save()             # saves the updated data
         return redirect(reverse('getnotes'))
 
@@ -732,16 +725,7 @@ def map_labels(request, *args ,**kwargs):
     label_id=request.POST['pk']
     user=request.POST['id']
     note_id=request.POST['key']
-    # label_id=pk
-    # user=id
-    # note_id=key
-    # if request.POST['label_id'] or request.POST['user'] or request.POST['note']==None:
-    #     messages.error('Invalid Details')
-    #     return redirect(reverse('getnotes'))
 
-    # label_id=request.POST['label_id']
-    # user=request.POST['user']
-    # note=request.POST['note']
     print('------------',label_id)
     print('------------',user)
     print('------------',note_id)
@@ -758,6 +742,7 @@ def map_labels(request, *args ,**kwargs):
 
     except Exception as e :
         return HttpResponse(res)
+
 
 @custom_login_required
 def delete_label(request,pk):
@@ -884,7 +869,7 @@ def remove_labels(request,pk,id,key,*args,**kwargs):
     }
 
     try:
-        if pk and id and key :
+        if pk and id and key :      # if all details are provided
 
             user_id=pk
             note_id=id
@@ -911,11 +896,13 @@ def search(request):
             'success': False
         }
         if request.method=='POST':
-            search_text = request.POST['search_text']
+            search_text = request.POST['search_text']       # get the search text
 
-            note_list=Notes.objects.filter(Q(title__contains=search_text)|Q(description__contains=search_text))
+            # __contains checks if text is present in a field of model
 
-            if note_list:
+            note_list=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text))
+
+            if note_list:       # if note_list is not blank
 
                 paginator = Paginator(note_list, 9)  # Show 9 contacts per page
                 page = request.GET.get('page')
@@ -931,7 +918,7 @@ def search(request):
 
 
     except Exception as e:
-         print(res)
+         print("Exception",e)
 
 
 
@@ -939,7 +926,7 @@ def search(request):
 @custom_login_required
 def reminder(request):
 
-    """ This method is used to show reminders to user """
+    """ This method is used to show reminders to user as notifications """
 
     res = {
         'message': 'No result found',  # Response Data
@@ -949,13 +936,13 @@ def reminder(request):
 
     try:
         if request.user:
-            # if request made from User.
+                                                # if request made from User.
             items = Notes.objects.filter(user=request.user).values()    # Gets all notes  for particular user.
 
-            dates=[]    # list to store only dates of every Note.
+            dates=[]                            # list to store only dates of every Note.
             for i in items:
                 if i['reminder']:               # if reminder column has some value
-                                                # convert and append the date to the list
+                                                # convert str to DT and append the date to the list
                     dates.append(datetime.datetime.strptime(i['reminder'],"%Y-%m-%d"))
 
 
@@ -963,12 +950,13 @@ def reminder(request):
 
             remind_dates=[]                     # list to store the dates for which reminder is in two days.
             for i in dates:
-                if (i-j).days<=2:               # calculates the difference and stores the value to list
+                if (i-j).days<=2 and (i-j).days>=0:
+                    print(i,(i-j).days)         # calculates the difference and stores the value to list
                     remind_dates.append(i)
 
             new_list=[]                          # list elements has some unwanted values and in Str format
             for i in remind_dates:
-                i=datetime.datetime.strftime(i, "%Y-%m-%d")
+                i=datetime.datetime.strftime(i, "%Y-%m-%d")     # converts datetime object to a string.
                 i=i[:10]                         # convert and slice to remove unwanted details
                 new_list.append(i)
 
@@ -977,7 +965,7 @@ def reminder(request):
             json_list=[]                         # get all notes with reminder
             # QuerySet to JSON
 
-            for i in data:
+            for i in data:                       # taking QuerySet data to list
                 json_list.append(i)
 
             return JsonResponse(json_list,safe=False)
@@ -995,32 +983,40 @@ def reminder(request):
 
 
 
-class Update(UpdateAPIView):
+class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update only operations.
     try:
-
-
         serializer_class = NoteSerializer
-       # queryset = Notes.objects.all()
+
     except Exception as e:
+
         print(e)
 
     def post(self, request, pk):
+        """ This method is used to update """
+
+        res = {
+            'message': 'No result found',  # Response Data
+            'data': {},
+            'success': False
+        }
+
         try:
-            res = {
-                'message': 'No result found',  # Response Data
-                'data': {},
-                'success': False
-            }
-            item = Notes.objects.get(id=pk)
+            if pk and request.data['collaborate']:
 
-            collaborate = request.data['collaborate']
+                item = Notes.objects.get(id=pk)
 
-            user = User.objects.get(id=collaborate)
-            item.collaborate.add(user)
-            item.save()
-            res['message']="Collabrator added successfully"
-            messages.success(request, message=res['message'])
-            return redirect(reverse('getnotes'))
+                collaborate = request.data['collaborate']
+
+                user = User.objects.get(id=collaborate)
+                item.collaborate.add(user)
+                item.save()
+                res['message']="Collabrator added successfully"
+                messages.success(request, message=res['message'])
+                return redirect(reverse('getnotes'))
+
+            else:
+                messages.error(request, message=res['message'])
+                return redirect(reverse('getnotes'))
 
         except Exception:
             messages.error(request, message=res['message'])
@@ -1037,7 +1033,7 @@ class View_reminder(View):
         'data': {},
         'success': False
     }
-
+    @custom_login_required
     def get(self, request):
 
         """ Reads the notes by user and archived field"""
@@ -1054,6 +1050,8 @@ class View_reminder(View):
                   # gets all the note and sort by created time
             note_list = Notes.objects.filter(~Q(reminder=None),user=request.user).values().order_by('-created_time')  # shows note only added by specific user.
 
+            # Q used for complex queries ' ~ ' for negative condition
+
             paginator = Paginator(note_list, 9)  # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
@@ -1066,8 +1064,10 @@ class View_reminder(View):
 
         except Exception as e:
             print(res)
+            return redirect(reverse('getnotes'))
 
 
+@custom_login_required
 def change_color(request,pk):
 
     try:
@@ -1076,16 +1076,16 @@ def change_color(request,pk):
             'data': {},
             'success': False
         }
-        if pk and request.POST['change_color']:
+        if pk and request.POST['change_color']:     # if pk and data for change color is not None.
 
-            item = Notes.objects.get(id=pk)
+            item = Notes.objects.get(id=pk)         # gets the note with ID
 
             new_color = request.POST['change_color']
 
-            item.for_color=new_color
+            item.for_color=new_color        # changes color with new color
             item.save()
             res['message'] = "color changed"
-            #messages.success(request, message=res['message'])
+
             return redirect(reverse('getnotes'))
 
         else:
@@ -1094,7 +1094,7 @@ def change_color(request,pk):
 
 
     except Exception:
+        print(Exception)
         messages.error(request, message=res['message'])
         return render(request, 'in.html', {})
 
-#  <!--<li>   <a href="{% url 'map_labels' k.id user.id i.id %}" style="padding-left:100px;" >{{k}}</a></li>-->
