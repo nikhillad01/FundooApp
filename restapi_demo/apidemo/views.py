@@ -220,10 +220,18 @@ def photo_list(request):
     """This method is used to upload a profile picture with cropping functionality"""
 
     if request.method == 'POST':
-        form = PhotoForm(request.POST, request.FILES)           # django form
-        if form.is_valid():
-            form.save()  # Saves the form.
+        username = request.POST['username']
+        #print(username)
+
+        if username==request.user:          # if username is valid
+            form = PhotoForm(request.POST, request.FILES)           # django form
+            if form.is_valid():
+                form.save()  # Saves the form.
+                return redirect('photo_list')
+        else:
+            messages.error(request,'Invalid Username')
             return redirect('photo_list')
+
     else:
         form = PhotoForm()                  # renders to page with form
         return render(request, 'photo_list.html', {'form': form})
@@ -838,20 +846,19 @@ def copy_note(request,pk):
 
     try:
 
-        if pk == None:  # if Pk is not provided.
+        if pk:                              # if Pk is provided.
+            obj = Notes.objects.get(pk=pk)  # gets all the data of note by pk.
+            obj.pk = None                   # sets the pk of obj to None so django automatically generates it.
+            obj.save()                      # saves the copy of note with new pk.
+            res['message'] = "Note copied"
+            messages.success(request, message=res['message'])
+            return redirect(reverse('getnotes'))
+
+        else:
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-
-        obj = Notes.objects.get(pk=pk)    # gets all the data of note by pk.
-        obj.pk = None                     # sets the pk of obj to None so django automatically generates it.
-        obj.save()          # saves the copy of note with new pk.
-
-        res['message']="Note copied"
-        messages.success(request, message=res['message'])
-        return redirect(reverse('getnotes'))
-
-    except Exception as e:
+    except Exception as e:              # if any exception occurs redirect to getnotes
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
@@ -869,17 +876,17 @@ def remove_labels(request,pk,id,key,*args,**kwargs):
     }
 
     try:
-        if pk and id and key :      # if all details are provided
+        if pk and id and key:      # if all details are provided
 
-            user_id=pk
-            note_id=id
-            label_id=key
-            item = Map_labels.objects.get(user_id=user_id,label_id=label_id,note_id=note_id)
+            # gets the specific item .
 
-            item.delete()
+            item = Map_labels.objects.get(user_id=pk, label_id=key, note_id=id)
+            item.delete()       # gets the item and delete it.
+            return redirect(reverse('getnotes'))
 
-
-
+        else:
+            res['message']="Invalid details provided"
+            messages.error(request,res['message'])
             return redirect(reverse('getnotes'))
 
     except Exception:
@@ -889,36 +896,45 @@ def remove_labels(request,pk,id,key,*args,**kwargs):
 
 @custom_login_required
 def search(request):
+    res = {
+        'message': 'Invalid details provided',  # Response Data
+        'data': {},
+        'success': False
+    }
     try:
-        res = {
-            'message': 'No result found',  # Response Data
-            'data': {},
-            'success': False
-        }
         if request.method=='POST':
-            search_text = request.POST['search_text']       # get the search text
+            if request.POST['search_text']:
 
-            # __contains checks if text is present in a field of model
+                search_text = request.POST['search_text']       # get the search text
 
-            note_list=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text))
+                # __contains checks if text is present in a field of model
 
-            if note_list:       # if note_list is not blank
+                note_list=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text))
 
-                paginator = Paginator(note_list, 9)  # Show 9 contacts per page
-                page = request.GET.get('page')
-                notelist = paginator.get_page(page)
+                if note_list:       # if note_list is not blank
 
-                res['message'] = "Search Notes"
-                res['success'] = True
-                res['data'] = notelist
-                #print(note_list)
-                return render(request, 'in.html', {'notelist': note_list})
+                    paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+                    page = request.GET.get('page')
+                    notelist = paginator.get_page(page)
+
+                    res['message'] = "Search Notes"
+                    res['success'] = True
+                    res['data'] = notelist
+
+                    return render(request, 'in.html', {'notelist': note_list})
+                else:
+                    res['message']="No results found"
+                    messages.error(request, message=res['message'])
+                    return redirect(reverse('getnotes'))
+
             else:
                 messages.error(request, message=res['message'])
-
+                return redirect(reverse('getnotes'))
 
     except Exception as e:
          print("Exception",e)
+         messages.error(request, message=res['message'])
+         return redirect(reverse('getnotes'))
 
 
 
@@ -935,7 +951,7 @@ def reminder(request):
     }
 
     try:
-        if request.user:
+
                                                 # if request made from User.
             items = Notes.objects.filter(user=request.user).values()    # Gets all notes  for particular user.
 
@@ -970,9 +986,6 @@ def reminder(request):
 
             return JsonResponse(json_list,safe=False)
 
-        else:
-            messages.error(request, message=res['message'])
-            return render(request, 'in.html', {})
 
 
     except Exception:
@@ -1047,20 +1060,22 @@ class View_reminder(View):
         """This method is used to read all the notes from database."""
 
         try:
-                  # gets all the note and sort by created time
-            note_list = Notes.objects.filter(~Q(reminder=None),user=request.user).values().order_by('-created_time')  # shows note only added by specific user.
+                print('In Try--------')
+                      # gets all the note and sort by created time
+                note_list = Notes.objects.filter(~Q(reminder=None), user=request.user).values().order_by('-created_time')  # shows note only added by specific user.
+                print('down the query-------')
+                # Q used for complex queries ' ~ ' for negative condition
 
-            # Q used for complex queries ' ~ ' for negative condition
+                paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+                page = request.GET.get('page')
+                notelist = paginator.get_page(page)
 
-            paginator = Paginator(note_list, 9)  # Show 9 contacts per page
-            page = request.GET.get('page')
-            notelist = paginator.get_page(page)
+                res['message'] = "All Trash Notes"
+                res['success'] = True
+                res['data'] = notelist
+                print(note_list)
+                return render(request, 'in.html', {'notelist': note_list})
 
-            res['message'] = "All Trash Notes"
-            res['success'] = True
-            res['data'] = notelist
-            print(note_list)
-            return render(request, 'in.html', {'notelist': note_list})
 
         except Exception as e:
             print(res)

@@ -5,6 +5,7 @@ from PIL import Image
 from django import forms
 from .models import Photo
 from .Upload_profile_pic_S3 import profile_pic
+from django.contrib.auth.models import User
 User= get_user_model()
 
 class LoginForm(forms.ModelForm):
@@ -79,6 +80,7 @@ class PhotoForm(forms.ModelForm):
         resized_image.save(photo.file.path)
         path=photo.file.path                    # gets the image path.
         profile_pic(request, path, username)      # calls method to upload pic to S3.
+
 
         return photo
 
