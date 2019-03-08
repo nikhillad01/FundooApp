@@ -1,4 +1,6 @@
 import json
+
+import redis
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -34,7 +36,7 @@ from rest_framework import status
 from .custom_decorators import custom_login_required
 from .models import Labels,Map_labels
 from django.db.models import Q
-
+from .redis_info import r
 
 import datetime
 
@@ -55,6 +57,7 @@ def profile_page(request):
 
 def logout(request):
     auth.logout(request)
+    r.flushall(asynchronous=False)
     return render(request, 'login.html')
 
 def base(request):
@@ -196,6 +199,9 @@ def demo_user_login(request):
                 cache.set('token', "token")
                 res['data'] =j
                 print(res)
+                r = redis.StrictRedis(host='localhost', port=6379, db=0)
+                r.set('token', res['data'])
+                print('from redis cache -----------',r.get('token'))
                 return render(request, 'in.html', {'token':res})   # renders to page with context=token
                 #return HttpResponseRedirect(reverse('getnotes'),content={"token":res})
             else:
@@ -559,16 +565,20 @@ def pin_unpin(request,pk):
 
 
 @custom_login_required
-def trash(request,pk):
+def trash(request,id):
+    print('----------------------trash')
     """This method is used to push item to trash
     pk: Primary key
     """
     try:
-        if pk:
-            item=Notes.objects.get(id=pk)
+        if id:
+            item=Notes.objects.get(id=id)
 
             if item.trash==False or item.trash==None:
+                print('in trash ------------------------------')
                 item.trash=True         # if trash field is None or False, make note trash
+                item.trash_time=datetime.datetime.now()
+                print('-------------Trash Time',item.trash_time)
                 item.save()
                 messages.success(request, message='Item moved to trash')
                 return redirect(reverse('getnotes'))
@@ -576,6 +586,7 @@ def trash(request,pk):
                 item.trash=False
                 item.save()
                 messages.success(request,message='item restored')
+                return redirect(reverse('getnotes'))
         else:
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
@@ -664,11 +675,13 @@ def is_archived(request,pk):
             item = Notes.objects.get(id=pk)
             if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
                 item.is_archived = True                 # make note archive
+                item.archive_time=datetime.datetime.now()
                 item.save()
                 messages.success(request, message='Item is archived')
                 return redirect(reverse('getnotes'))
             elif item.is_archived == True:          # it item is already archived
                 item.is_archived = False
+                item.archive_time=None
                 item.save()
                 messages.success(request, message='Removed from archived')
                 return redirect(reverse('getnotes'))
@@ -726,6 +739,7 @@ class View_is_archived(View):
 
 @custom_login_required
 def add_labels(request,pk):
+
     res = {
         'message': 'Something bad happened',  # Response Data
         'data': {},
@@ -734,7 +748,6 @@ def add_labels(request,pk):
 
     try:
         if pk and request.POST['label_name']:       # if all details provided
-
             label_name = request.POST['label_name']
             user = pk
             label=Labels.objects.create(user=User.objects.get(id=user),label_name=label_name)
@@ -820,7 +833,7 @@ def view_notes_for_each_label(request, pk, id):
 
     try:
 
-        if pk and id !=None:            # if pk and id is not None.
+        if pk and id:            # if pk and id is not None.
 
             label_id=pk         # sets the pk and id tp label and user id
             user_id=id
@@ -1025,6 +1038,9 @@ def reminder(request):
 
 
 class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update only operations.
+
+    """ This is Used for Collaborator From Card"""
+
     try:
         serializer_class = NoteSerializer
 
@@ -1154,3 +1170,67 @@ def change_color(request,pk):
         messages.error(request, message=res['message'])
         return render(request, 'in.html', {})
 
+
+@custom_login_required
+def auto_delete_archive(request):
+
+    """ This method is used to automatically delete items from Archive and trash
+        Archive Notes : Deleted permanently after 15 days or moved to trash
+        Trash Notes : Deleted permanently after 7 days
+    """
+
+    try:
+
+        token = r.get('token')
+        token=token.decode(encoding='utf-8')
+        decoded_token=jwt.decode(token, 'secret_key', algorithms=['HS256'])
+        user=User.objects.get(username=decoded_token['username']).pk
+
+
+
+        note_list = Notes.objects.filter(~Q(archive_time=None),user_id=user, is_archived=True).values('archive_time','id','trash_time').order_by(
+            '-created_time')
+        print('note lis-----',note_list)                                       # gets all the notes who's archive time is not None adn is_archive field is True
+        for i in note_list:
+                                             # gets the archive_time for each note and add 15 days to it i.e. end_date
+            end_date=i['archive_time'] + datetime.timedelta(days=15)
+            today=datetime.datetime.today().date()  # gets the today's date
+
+            if end_date.date()==today:       # if end date and today's date are equal means 15 days over , then move the note to trash.
+
+                item = Notes.objects.get(id=i['id'])    # gets the note by id
+                item.trash=True                 # moves to trash.
+                item.save()                     # saves the note.
+
+
+
+        trash_note_list = Notes.objects.filter(~Q(trash_time=None), user_id=user,trash=True).values(
+            'id', 'trash_time').order_by(
+            '-created_time')
+        print('trash list ------',trash_note_list)
+        # gets all the notes who's trash time is not None and trash field is True
+
+        for j in trash_note_list:
+            # gets the trash_time for each note and add 15 days to it i.e. end_date
+            end_date=j['trash_time'] + datetime.timedelta(days=7)
+
+            today=datetime.datetime.today().date()
+            # gets the today's date
+
+            # if end date and today's date are equal means 7 days over , then permanently delete the note.
+            if end_date.date()==today:
+                delete_item = Notes.objects.get(id=j['id'])  # gets the note by id
+                delete_item.delete()                         # deletes the note
+
+        archive_delete=[]
+        for i in note_list:
+           archive_delete.append(i)
+
+        trash_delete=[]
+        for i in trash_note_list:
+            trash_delete.append(i)
+
+        return HttpResponse(note_list,trash_note_list)
+
+    except Exception as e:
+        print("Exception",e)

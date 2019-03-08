@@ -579,7 +579,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                           </a>
                             <ul class="dropdown-menu dropleft">
                                  <a class="dropdown-item" href="{% url 'copy_note' i.id %}" style="padding-left:100px;">Copy note</a>
-                                <a class="dropdown-item" href="{% url 'deleteN' i.id %}" style="padding-left:100px;width:20;">Trash</a>
+                                <a class="dropdown-item" href="{% url 'move_to_trash' i.id %}" style="padding-left:100px;width:20;">Trash</a>
                             <a class="dropdown-item" href="{% url 'updatenote' i.id %}" style="padding-left:100px;">Update</a>
                             <a class="dropdown-item" href="{% url 'updateform' i.id %}" style="padding-left:100px;">New Update</a>
                               <a class="dropdown-item" href="{% url 'delete_forever' i.id %}" style="padding-left:100px;">Delete Forever</a>
@@ -1083,6 +1083,23 @@ $(document).ready(function(){
 
 
 </script>
+<script>
+$(document).ready(function(){
+    var token = localStorage.getItem('token');
+    $.ajax({
+    type: 'GET',
+    url: "http://127.0.0.1:8000/auto_delete_archive/",
+    headers: {
+        "Authorization":token
+    }
+
+}).done(function(data) {
+
+    console.log(data);
+});
+});
+</script>
+
 </html>
 
 

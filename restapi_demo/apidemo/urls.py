@@ -65,6 +65,9 @@ urlpatterns = [
     #deletenote
     path('delete/<int:id>/',views.deleteN, name='deleteN'),
     #getnotes
+    #move_to_trash
+    path('move_to_trash/<int:id>/',views.trash, name='move_to_trash'),
+
     path('getnotes/', views.getnotes.as_view(), name='getnotes'),
     #updatenote
     path('updatenote/<int:pk>/', views.updatenote.as_view(),name='updatenote'),
@@ -125,6 +128,8 @@ urlpatterns = [
     #change_color
     path('change_color/<int:pk>/', views.change_color, name='change_color'),
 
+    #auto_delete_archive
+    path('auto_delete_archive/', views.auto_delete_archive, name='auto_delete_archive'),
 ]
 
 

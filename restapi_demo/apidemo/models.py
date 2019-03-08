@@ -43,9 +43,9 @@ class Notes(models.Model):      # Model to Create Notes.
     label = models.CharField(max_length=50,default=None,null=True)
     collaborate = models.ManyToManyField(User, null=True, blank=True, related_name='collaborated_user')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner', null=True, blank=True)
+    archive_time= models.DateTimeField(blank=True,null=True)
+    trash_time=models.DateTimeField(blank=True,null=True)
 
-
-    
     def __str__(self):          # string Representation for model.
         return self.title
 
