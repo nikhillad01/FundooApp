@@ -44,6 +44,8 @@ class Notes(models.Model):      # Model to Create Notes.
     collaborate = models.ManyToManyField(User, null=True, blank=True, related_name='collaborated_user')
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='owner', null=True, blank=True)
 
+
+    
     def __str__(self):          # string Representation for model.
         return self.title
 

@@ -18,7 +18,7 @@ class Test_Note_Model:
 
             content = encode_multipart('BoUnDaRyStRiNg', data)
             content_type = 'multipart/form-data; boundary=BoUnDaRyStRiNg'
-            request = factory.put('/addnote/', content, content_type=content_type)
+            request = factory.post('/addnote/', content, content_type=content_type)
 
     def test_invalid_data(self):
         data = {"title": "PyTest_checking_note_create",
@@ -29,3 +29,10 @@ class Test_Note_Model:
         content = encode_multipart('BoUnDaRyStRiNg', data)
         content_type = 'multipart/form-data; boundary=BoUnDaRyStRiNg'
         request = factory.put('/addnote/', content, content_type=content_type)
+
+
+    def test_make_archive(self):
+            data={"is_archive":True}
+            content = encode_multipart('BoUnDaRyStRiNg', data)
+            content_type = 'JSON'
+            request = factory.post('/is_archive/', content, content_type=content_type)

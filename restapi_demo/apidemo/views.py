@@ -1,6 +1,7 @@
 import json
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST
 from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
@@ -74,57 +75,65 @@ class LoginView(APIView):
     http_method_names = ['post', 'get']      # to use POST method by default it was using GET.
 
     def post(self, request):
-        if request.method == 'POST':
-            username = request.POST.get('username')
-            password = request.POST.get('password')
-            user = authenticate(username=username, password=password)
-            if user:
-                if user.is_active:
-                    payload = {'username': username,        # creates token using Payload.
-                                'password': password, }
-                    jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256')}
-                    return HttpResponse(        # returns token as response with success status code.
-                     jwt_token.values(),
-                        status=200,
-                        content_type="application/json"
-                    )
+        try:
+            if request.method == 'POST':
+                username = request.POST.get('username')
+                password = request.POST.get('password')
+                user = authenticate(username=username, password=password)
+                if user:
+                    if user.is_active:
+                        payload = {'username': username,        # creates token using Payload.
+                                    'password': password, }
+                        jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256')}
+                        return HttpResponse(        # returns token as response with success status code.
+                         jwt_token.values(),
+                            status=200,
+                            content_type="application/json"
+                        )
+                    else:
+                        return HttpResponse("Your account was inactive.")
                 else:
-                    return HttpResponse("Your account was inactive.")
+                        print("Someone tried to login and failed.")
+                        print("They used username: {} and password: {}".format(username, password))
+                        return HttpResponse("Invalid login details given")
             else:
-                    print("Someone tried to login and failed.")
-                    print("They used username: {} and password: {}".format(username, password))
-                    return HttpResponse("Invalid login details given")
-        else:
+                return render(request, 'dashboard.html', {})
+        except Exception as e:
+            print(e)
             return render(request, 'dashboard.html', {})
 
 
 
 
 def Signup(request):
-    if request.method == 'POST':
-        form = SignupForm(request.POST)
-        if form.is_valid():
-            user = form.save(commit=False)  # object  hasn't yet been saved to the database.
-            user.is_active = False          # user disabled
-            user.save()                     # stores in database.
-            data = {                        # renders to html with variables
-                #"urlsafe_base64_encode" takes user id and generates the base64 code(uidb64).
-                'user': user,
-                'domain':'http://127.0.0.1:8000',
-                #'uid': urlsafe_base64_encode(force_bytes(user.pk)),    # encodes
-                'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),  # coz django 2.0.0 to convert it to string
-                'token': account_activation_token.make_token(user),  # creates a token
-            }
-            message = render_to_string('acc_active_email.html', data)
-            mail_subject = 'Activate your Fundoo account.'  # mail subject
-            to_email = form.cleaned_data.get('email')       # mail id to be sent to
-            email = EmailMessage(mail_subject, message, to=[to_email])   # takes 3 args: 1. mail subject 2. message 3. mail id to send
-            email.send()        # sends the mail
-            return HttpResponse('Please confirm your email address to complete the registration')
+    try:
+        if request.method == 'POST':
+            form = SignupForm(request.POST)
+            if form.is_valid():
+                user = form.save(commit=False)  # object  hasn't yet been saved to the database.
+                user.is_active = False          # user disabled
+                user.save()                     # stores in database.
+                data = {                        # renders to html with variables
+                    #"urlsafe_base64_encode" takes user id and generates the base64 code(uidb64).
+                    'user': user,
+                    'domain':'http://127.0.0.1:8000',
+                    #'uid': urlsafe_base64_encode(force_bytes(user.pk)),    # encodes
+                    'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),  # coz django 2.0.0 to convert it to string
+                    'token': account_activation_token.make_token(user),  # creates a token
+                }
+                message = render_to_string('acc_active_email.html', data)
+                mail_subject = 'Activate your Fundoo account.'  # mail subject
+                to_email = form.cleaned_data.get('email')       # mail id to be sent to
+                email = EmailMessage(mail_subject, message, to=[to_email])   # takes 3 args: 1. mail subject 2. message 3. mail id to send
+                email.send()        # sends the mail
+                return HttpResponse('Please confirm your email address to complete the registration')
 
-    else:
-        form = SignupForm()
-    return render(request, 'signup.html', {'form': form})       # if  GET request
+        else:
+            form = SignupForm()
+        return render(request, 'signup.html', {'form': form})       # if  GET request
+
+    except Exception as e :
+        print(e)
 
 
 
@@ -134,17 +143,22 @@ def activate(request, uidb64, token):
     try:
         uid = force_text(urlsafe_base64_decode(uidb64))         # decode to string find the primary key of user
         user = User.objects.get(pk=uid)     # gets the username
+
+        if user and account_activation_token.check_token(user, token):
+            user.is_active = True           # enables the user
+            user.save()                     # saves to DB.
+            return HttpResponsePermanentRedirect(reverse('login_v'))
+        else:
+            return HttpResponse('Activation link is invalid!')
+
     except(TypeError, ValueError, OverflowError, User.DoesNotExist):
         user = None
-    if user and account_activation_token.check_token(user, token):
-        user.is_active = True           # enables the user
-        user.save()                     # saves to DB.
-        return HttpResponsePermanentRedirect(reverse('login_v'))
-    else:
-        return HttpResponse('Activation link is invalid!')
 
 def login_v(request):               # renders to login page.
-    return render(request, 'login.html')
+    try:
+        return render(request, 'login.html')
+    except Exception as e:
+        print(e)
 
 
 
@@ -206,39 +220,48 @@ def open_upload_form(request):
 def upload_profile(request):
 
     """ This method is used to upload a profile picture to S3 bucket """
-
-    #profile_pic(request)                      # calls profile_pic upload method from S3 Upload file.
-    messages.success(request, "Profile Pic updated")    # returns success message
-    return render(request, 'profile.html')
+    try:
+        #profile_pic(request)                      # calls profile_pic upload method from S3 Upload file.
+        messages.success(request, "Profile Pic updated")    # returns success message
+        return render(request, 'profile.html')
+    except Exception as e:
+        print(e)
 
 def crop(request):
-    return render(request,'photo_list.html')
+    try:
+        return render(request,'photo_list.html')
+    except Exception as e:
+        print(e)
 
 
 def photo_list(request):
 
     """This method is used to upload a profile picture with cropping functionality"""
+    try:
+        if request.method == 'POST':
+            username = request.POST['username']
+            #print(username)
 
-    if request.method == 'POST':
-        username = request.POST['username']
-        #print(username)
-
-        if username==request.user:          # if username is valid
-            form = PhotoForm(request.POST, request.FILES)           # django form
-            if form.is_valid():
-                form.save()  # Saves the form.
+            if username==request.user:          # if username is valid
+                form = PhotoForm(request.POST, request.FILES)           # django form
+                if form.is_valid():
+                    form.save()  # Saves the form.
+                    return redirect('photo_list')
+            else:
+                messages.error(request,'Invalid Username')
                 return redirect('photo_list')
+
         else:
-            messages.error(request,'Invalid Username')
-            return redirect('photo_list')
-
-    else:
-        form = PhotoForm()                  # renders to page with form
-        return render(request, 'photo_list.html', {'form': form})
-
+            form = PhotoForm()                  # renders to page with form
+            return render(request, 'photo_list.html', {'form': form})
+    except Exception as e:
+        print(e)
 
 def demo(request):
-    return render(request,'demo.html',{})
+    try:
+        return render(request,'demo.html',{})
+    except Exception as e:
+        print(e)
 
 
 # API to create note
@@ -284,8 +307,10 @@ class getnotes(View):
 
     def get(self, request):
 
-
-        print('aUTH @!!@!@!@!@ ',request.META.get('HTTP_AUTHORIZATION'))
+        try:
+            print('aUTH @!!@!@!@!@ ',request.META.get('HTTP_AUTHORIZATION'))
+        except Exception as e:
+            print(e)
 
         #""" This method is used to read all notes """
 
@@ -341,7 +366,7 @@ class getnotes(View):
 
             all_users=User.objects.filter(~Q(username=request.user.username)).values('username','id')
                # returns list of all user except the one who is requesting it .
-
+            print('all users',all_users)
 
 
 
@@ -359,40 +384,43 @@ class updatenote(UpdateAPIView):
     serializer_class = NoteSerializer       # Serializer
 
     def put(self, request, pk):
-        serializer = NoteSerializer(data=request.data)
-        """This method is used to update the notes"""
-
-        res = {
-            'message': 'Something bad happened',    # response information
-            'data': {},
-            'success': False
-        }
-
-        if pk is None:                          # checks if primary key is passed
-            raise ValueError
-
-        if request.data is None:                # checks data is present in request
-            raise Exception('No data in request')
-
         try:
-            note = Notes.objects.get(pk=pk)     # checks if primary key is available in DB and gets the data
+
+            serializer = NoteSerializer(data=request.data)
+            """This method is used to update the notes"""
+
+            res = {
+                'message': 'Something bad happened',    # response information
+                'data': {},
+                'success': False
+            }
+
+            if pk is None:                          # checks if primary key is passed
+                raise ValueError
+
+            if request.data is None:                # checks data is present in request
+                raise Exception('No data in request')
+
+            try:
+                note = Notes.objects.get(pk=pk)     # checks if primary key is available in DB and gets the data
+            except Exception as e:
+                print(e)
+                return JsonResponse(res)
+
+            if serializer.is_valid():
+                # if valid then save it
+                serializer.save()
+                # in response return data in json format
+                res = {
+                    'message': 'Updated Successfully',
+                    'data': serializer.data,
+                    'success': True
+                }
+                return Response(res, status=status.HTTP_201_CREATED)
+            # else return error msg in response
+            return Response(res, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             print(e)
-            return JsonResponse(res)
-
-        if serializer.is_valid():
-            # if valid then save it
-            serializer.save()
-            # in response return data in json format
-            res = {
-                'message': 'Updated Successfully',
-                'data': serializer.data,
-                'success': True
-            }
-            return Response(res, status=status.HTTP_201_CREATED)
-        # else return error msg in response
-        return Response(res, status=status.HTTP_400_BAD_REQUEST)
-
 
 @custom_login_required
 def deleteN(request,id):
@@ -406,22 +434,24 @@ def deleteN(request,id):
         'data': {},
         'success': False
     }
-
-    if id is None:                              # check is ID is not None
-                                                #raise Exception('ID not found')
-        return JsonResponse(res)
-    else:
-        try:
-            item = Notes.objects.get(pk=id)     # checks if note is present of specific id
-
-            item.trash=True
-            item.save()
-            return redirect(reverse('getnotes'))
-
-        except Exception as e:
-            print(e)
-            res['message'] = "Note not present for specific ID"
+    try:
+        if id is None:                              # check is ID is not None
+                                                    #raise Exception('ID not found')
             return JsonResponse(res)
+        else:
+            try:
+                item = Notes.objects.get(pk=id)     # checks if note is present of specific id
+
+                item.trash=True
+                item.save()
+                return redirect(reverse('getnotes'))
+
+            except Exception as e:
+                print(e)
+                res['message'] = "Note not present for specific ID"
+                return JsonResponse(res)
+    except Exception as e:
+        print(e)
 
 @custom_login_required
 def updateform(request,pk):
@@ -433,14 +463,13 @@ def updateform(request,pk):
         'data': {},
         'success': False
     }
-
-    if pk ==None:                      # if Pk is not provided.
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
-
     try:
-        note = Notes.objects.get(id=pk)  # gets the note with  PK
-        return render(request, 'Notes/update.html', {"note": note})
+        if pk ==None:                      # if Pk is not provided.
+            messages.error('Invalid Details')
+            return redirect(reverse('getnotes'))
+        else:
+            note = Notes.objects.get(id=pk)  # gets the note with  PK
+            return render(request, 'Notes/update.html', {"note": note})
 
     except Exception as e:
         return HttpResponse(e)
@@ -456,26 +485,29 @@ def updateNotes(request,pk):
 
     """ This method is used to update the notes
     pk: Primary key
+
     """
-    pk_note=request.POST.get('pk_note')
-    print('found pk',pk_note)
-    pk=pk_note
     res = {
         'message': 'ID not found',  # response information
         'data': {},
         'success': False
     }
-
-    if pk is None:                  # if pk is not provided.
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
-
-
-    title=request.POST.get('title')
-    update_description=request.POST.get('description')
-
-
     try:
+        pk_note=request.POST.get('pk_note')
+        print('found pk',pk_note)
+        pk=pk_note
+
+
+        if pk is None:                  # if pk is not provided.
+            messages.error('Invalid Details')
+            return redirect(reverse('getnotes'))
+
+
+        title=request.POST.get('title')
+        update_description=request.POST.get('description')
+
+
+
 
         note=Notes.objects.get(id=pk_note)       # gets the data with primary key
         print('note',note)
@@ -503,23 +535,23 @@ def pin_unpin(request,pk):
      pk: Primary key
      """
 
-    if pk==None:                # if Pk is not provided
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
-
     try:
-        item = Notes.objects.get(id=pk)         # gets particular item from DB with PK.
+        if pk:
+            item = Notes.objects.get(id=pk)         # gets particular item from DB with PK.
 
 
-        if item.is_pinned == False or item.is_pinned==None:
-            item.is_pinned=True         # if item is not pinned or False .. pin it
-            item.save()                 # saves to the DB.
-            messages.success(request,message='Note pinned')
-            return redirect(reverse('getnotes'))
+            if item.is_pinned == False or item.is_pinned==None:
+                item.is_pinned=True         # if item is not pinned or False .. pin it
+                item.save()                 # saves to the DB.
+                messages.success(request,message='Note pinned')
+                return redirect(reverse('getnotes'))
+            else:
+                item.is_pinned=False            # if item is already pinned , unpin it.
+                item.save()
+                messages.success(request,message='Note Unpinned')
+                return redirect(reverse('getnotes'))
         else:
-            item.is_pinned=False            # if item is already pinned , unpin it.
-            item.save()
-            messages.success(request,message='Note Unpinned')
+            messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
     except Exception as e:
@@ -531,24 +563,22 @@ def trash(request,pk):
     """This method is used to push item to trash
     pk: Primary key
     """
-    if pk == None:                  # if Pk is Not provided.
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
-
     try:
-        item=Notes.objects.get(id=pk)
+        if pk:
+            item=Notes.objects.get(id=pk)
 
-
-
-        if item.trash==False or item.trash==None:
-            item.trash=True         # if trash field is None or False, make note trash
-            item.save()
-            messages.success(request, message='Item moved to trash')
+            if item.trash==False or item.trash==None:
+                item.trash=True         # if trash field is None or False, make note trash
+                item.save()
+                messages.success(request, message='Item moved to trash')
+                return redirect(reverse('getnotes'))
+            elif item.trash==True:          # if item already in trash restore it.
+                item.trash=False
+                item.save()
+                messages.success(request,message='item restored')
+        else:
+            messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
-        elif item.trash==True:          # if item already in trash restore it.
-            item.trash=False
-            item.save()
-            messages.success(request,message='item restored')
 
     except Exception as e :
         return HttpResponse("No item found ",e)
@@ -559,6 +589,7 @@ class view_trash(View):
 
     """This method is used to display all the items which are in trash"""
 
+    @method_decorator(custom_login_required)
     def get(self, request):
 
 
@@ -598,16 +629,17 @@ def delete_forever(request, pk):
         'data': {},
         'success': False
     }
-    if pk is None:
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
 
     try:
-        item = Notes.objects.get(id=pk)
+        if pk:
+            item = Notes.objects.get(id=pk)
 
-        item.delete()       # deletes the note permanently
-        messages.success(request, message='Item Deleted forever')
-        return redirect(reverse('getnotes'))
+            item.delete()       # deletes the note permanently
+            messages.success(request, message='Item Deleted forever')
+            return redirect(reverse('getnotes'))
+        else:
+            messages.error('Invalid Details')
+            return redirect(reverse('getnotes'))
 
     except Exception as e:
         return HttpResponse(res)
@@ -626,23 +658,22 @@ def is_archived(request,pk):
         'success': False
     }
 
-    if pk==None:            # if Pk is not provided.
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
 
     try:
-        item = Notes.objects.get(id=pk)
-
-
-        if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
-            item.is_archived = True                 # make note archive
-            item.save()
-            messages.success(request, message='Item is archived')
-            return redirect(reverse('getnotes'))
-        elif item.is_archived == True:          # it item is already archived
-            item.is_archived = False
-            item.save()
-            messages.success(request, message='Removed from archived')
+        if pk:
+            item = Notes.objects.get(id=pk)
+            if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
+                item.is_archived = True                 # make note archive
+                item.save()
+                messages.success(request, message='Item is archived')
+                return redirect(reverse('getnotes'))
+            elif item.is_archived == True:          # it item is already archived
+                item.is_archived = False
+                item.save()
+                messages.success(request, message='Removed from archived')
+                return redirect(reverse('getnotes'))
+        else:
+            messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
     except Exception as e:
@@ -661,6 +692,7 @@ class View_is_archived(View):
         'success': False
     }
 
+    @method_decorator(custom_login_required)
     def get(self, request):
 
         """ Reads the notes by user and archived field"""
@@ -700,22 +732,21 @@ def add_labels(request,pk):
         'success': False
     }
 
-    if pk==None:            # if Pk is not provided.
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
-
-
-    label_name=request.POST['label_name']
-    user=pk
-
     try:
-        label=Labels.objects.create(user=User.objects.get(id=user),label_name=label_name)
-        label.save()
-        messages.success(request, message='Label Created')
-        return redirect(reverse('getnotes'))
+        if pk and request.POST['label_name']:       # if all details provided
 
+            label_name = request.POST['label_name']
+            user = pk
+            label=Labels.objects.create(user=User.objects.get(id=user),label_name=label_name)
+            label.save()
+            messages.success(request, message='Label Created')
+            return redirect(reverse('getnotes'))
+        else:
+            messages.error('Invalid Details')
+            return redirect(reverse('getnotes'))
     except Exception as e:
         return HttpResponse(res,e)
+
 
 @custom_login_required
 def map_labels(request, *args ,**kwargs):
@@ -728,23 +759,23 @@ def map_labels(request, *args ,**kwargs):
         'success': False
     }
 
-    label_id=request.POST['pk']
-    user=request.POST['id']
-    note_id=request.POST['key']
-
-    print('------------',label_id)
-    print('------------',user)
-    print('------------',note_id)
     try:
-        map=Map_labels.objects.create(label_id=Labels.objects.get(id=label_id),user=User.objects.get(id=user),note=Notes.objects.get(id=note_id))
-        map.save()
-        res = {
-            'message': 'label mapped',  # Response Data
-            'data': {},
-            'success': True
-        }
-        messages.success(request, message='Label mapped')
-        return redirect(reverse('getnotes'))
+        if request.POST['pk'] and request.POST['id'] and request.POST['key']:
+
+            label_id = request.POST['pk']
+            user = request.POST['id']
+            note_id = request.POST['key']
+            # creates the instance with above details provided
+
+            map=Map_labels.objects.create(label_id=Labels.objects.get(id=label_id),user=User.objects.get(id=user),note=Notes.objects.get(id=note_id))
+            map.save()
+            res = {
+                'message': 'label mapped',  # Response Data
+                'data': {},
+                'success': True
+            }
+            messages.success(request, message='Label mapped')
+            return redirect(reverse('getnotes'))
 
     except Exception as e :
         return HttpResponse(res)
@@ -762,16 +793,15 @@ def delete_label(request,pk):
         'success': False
     }
 
-    if pk == None:  # if Pk is not provided.
-        messages.error('Invalid Details')
-        return redirect(reverse('getnotes'))
     try:
-
-        label=Labels.objects.get(id=pk)
-        label.delete()
-        messages.success(request, message='Label deleted')
-        return redirect(reverse('getnotes'))
-
+        if pk:
+            label=Labels.objects.get(id=pk)     # gets the label by id and deletes it
+            label.delete()
+            messages.success(request, message='Label deleted')
+            return redirect(reverse('getnotes'))
+        else:
+            messages.error('Invalid Details')
+            return redirect(reverse('getnotes'))
     except Exception as e:
         return HttpResponse(res)
 
@@ -1002,8 +1032,9 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
 
         print(e)
 
+    #@method_decorator(custom_login_required)
     def post(self, request, pk):
-        """ This method is used to update """
+        """ This method is used to update  and add collaborator from card """
 
         res = {
             'message': 'No result found',  # Response Data
@@ -1014,16 +1045,27 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
         try:
             if pk and request.data['collaborate']:
 
-                item = Notes.objects.get(id=pk)
+                item = Notes.objects.get(id=pk)     # gets the Note
 
-                collaborate = request.data['collaborate']
+                collab = request.data['collaborate']    # gets the user if to collaborate
 
-                user = User.objects.get(id=collaborate)
-                item.collaborate.add(user)
-                item.save()
-                res['message']="Collabrator added successfully"
-                messages.success(request, message=res['message'])
-                return redirect(reverse('getnotes'))
+                user = User.objects.get(id=collab)      # gets the user from ID
+
+                if Notes.collaborate.through.objects.filter(user_id=user, notes_id=item.id):
+
+                    """ Checks if collaborator is already attached to particular Note """
+
+                    res['message']="Collaborator Already Exists to this note"
+                    messages.success(request, message=res['message'])
+                    return redirect(reverse('getnotes'))
+
+                else:
+
+                    item.collaborate.add(user)
+                    item.save()
+                    res['message'] = "Collabrator added successfully"
+                    messages.success(request, message=res['message'])
+                    return redirect(reverse('getnotes'))
 
             else:
                 messages.error(request, message=res['message'])
@@ -1045,7 +1087,7 @@ class View_reminder(View):
         'success': False
     }
 
-
+    @method_decorator(custom_login_required)    # method decorator is used for CBV
     def get(self, request):
 
         """ Reads the notes by user and archived field"""
