@@ -944,13 +944,21 @@ def search(request):
     }
     try:
         if request.method=='POST':
-            if request.POST['search_text']:
+
+            if request.POST['search_text']:         # if search field is not none
+
+                token = r.get('token')  # gets the token from redis cache
+                token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+                decoded_token = jwt.decode(token, 'secret_key',
+                                           algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
+                user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
+
 
                 search_text = request.POST['search_text']       # get the search text
 
                 # __contains checks if text is present in a field of model
 
-                note_list=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text))
+                note_list=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text),user=user)
 
                 if note_list:       # if note_list is not blank
 
@@ -992,9 +1000,14 @@ def reminder(request):
     }
 
     try:
+            token = r.get('token')                  # gets the token from redis cache
+            token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+            decoded_token = jwt.decode(token, 'secret_key',
+                                       algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
+            user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
 
                                                 # if request made from User.
-            items = Notes.objects.filter(user=request.user).values()    # Gets all notes  for particular user.
+            items = Notes.objects.filter(user=user).values()    # Gets all notes  for particular user.
 
             dates=[]                            # list to store only dates of every Note.
             for i in items:
@@ -1017,7 +1030,7 @@ def reminder(request):
                 i=i[:10]                         # convert and slice to remove unwanted details
                 new_list.append(i)
 
-            data=Notes.objects.filter(user=request.user,reminder__in=new_list).values('title','reminder')
+            data=Notes.objects.filter(user=user,reminder__in=new_list).values('title','reminder')
 
             json_list=[]                         # get all notes with reminder
             # QuerySet to JSON
@@ -1117,10 +1130,15 @@ class View_reminder(View):
         """This method is used to read all the notes from database."""
 
         try:
-                print('In Try--------')
+                token = r.get('token')          # gets the token from redis cache
+                token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+                decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])   # decodes JWT token and gets the values Username etc
+                user = User.objects.get(username=decoded_token['username']).pk          # gets the user from username
+
+
                       # gets all the note and sort by created time
-                note_list = Notes.objects.filter(~Q(reminder=None), user=request.user).values().order_by('-created_time')  # shows note only added by specific user.
-                print('down the query-------')
+                note_list = Notes.objects.filter(~Q(reminder=None), user=user).values().order_by('-created_time')  # shows note only added by specific user.
+
                 # Q used for complex queries ' ~ ' for negative condition
 
                 paginator = Paginator(note_list, 9)  # Show 9 contacts per page
@@ -1130,12 +1148,12 @@ class View_reminder(View):
                 res['message'] = "All Trash Notes"
                 res['success'] = True
                 res['data'] = notelist
-                print(note_list)
+
                 return render(request, 'in.html', {'notelist': note_list})
 
 
         except Exception as e:
-            print(res)
+            messages.error(request,res)
             return redirect(reverse('getnotes'))
 
 
@@ -1234,3 +1252,49 @@ def auto_delete_archive(request):
 
     except Exception as e:
         print("Exception",e)
+
+
+
+@custom_login_required
+@require_POST
+def invite(request):
+    res = {
+        'message': 'Something Bad Happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+    try:
+        if request.POST['email']:
+
+            token = r.get('token')
+            token = token.decode(encoding='utf-8')
+            decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
+            user = User.objects.get(username=decoded_token['username'])
+
+
+            email_user=request.POST['email']        # gets the email
+
+            data = {
+                'user': user,
+                'domain': '127.0.0.1:8000',
+            }
+
+            message = render_to_string('invite.html', data)
+            mail_subject = 'Fundoo Invitation'  # mail subject
+            to_email = email_user # mail id to be sent to
+            email = EmailMessage(mail_subject, message,
+                                 to=[to_email])  # takes 3 args: 1. mail subject 2. message 3. mail id to send
+            email.send()  # sends the mail
+
+            res['message']="Invitation sent successfully"
+            messages.success(request, message=res['message'])
+            return redirect(reverse('getnotes'))
+
+        else:
+            res['message']="No values given"
+            messages.error(request, message=res['message'])
+            return redirect(reverse('getnotes'))
+
+    except Exception :
+        messages.error(request, message=res['message'])
+        return redirect(reverse('getnotes'))

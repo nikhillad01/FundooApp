@@ -118,18 +118,24 @@ urlpatterns = [
 
     #reminder
     path('reminder/', views.reminder, name='reminder'),
+    path('View_reminder/', views.View_reminder.as_view(), name='View_reminder'),
+
 
     #Update
     path('Update/<int:pk>/', views.Update.as_view(), name='Update'),
     #View_reminder
-    path('View_reminder/', views.View_reminder.as_view(), name='View_reminder'),
+
 
 
     #change_color
     path('change_color/<int:pk>/', views.change_color, name='change_color'),
 
+
     #auto_delete_archive
     path('auto_delete_archive/', views.auto_delete_archive, name='auto_delete_archive'),
+
+    #invite
+    path('invite/', views.invite, name='invite'),
 ]
 
 
