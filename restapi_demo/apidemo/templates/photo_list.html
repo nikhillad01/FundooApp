@@ -4,7 +4,7 @@
 <title>Fundoo Notes</title>
 <script type="text/javascript">
     $("body").on("click", "#uploadbutton", function () {
-        var allowedFiles = [".jpeg"];
+        var allowedFiles = [".png"];
         var fileUpload = $("#fileUpload");
         var lblError = $("#lblError");
         var regex = new RegExp("([a-zA-Z0-9\s_\\.\-:])+(" + allowedFiles.join('|') + ")$");
@@ -82,7 +82,7 @@
 {% block content %}
 
 <a href="{% url 'base' %}" class="btn btn-default">Home</a></p><br>
- <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg
+ <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}
 " alt="no pic to display"/><br>
   <h1 class="page-header"></h1>
 
@@ -98,7 +98,7 @@
 
   <!-- MODAL TO CROP THE IMAGE -->
 
-<form enctype="multipart/form-data" action="{% url 'upload_profile' %}" method="post" >
+<form enctype="multipart/form-data" action="{% url 'photo_list' %}" method="post" >
 <div class="modal fade" id="modalCrop">
     <div class="modal-dialog">
       <div class="modal-content">

@@ -7,17 +7,16 @@
 
 {% if messages %}
     <script>alert("{{ message }}")</script>
-</p>
+
 {% endif %}
 
 <a href="{% url 'logout' %}" class="btn btn-default" role="button" style="float: right;">Logout</a>
                 <div class="row">
                     <div class="col-md-4">
                         <div class="profile-img">
-                            <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg
-" alt="no pic to display"/><br>
- <form method="post" enctype="multipart/form-data" action="{% url 'upload_profile' %}">
-                                        <input type="file" name="pic" accept="image/jpeg"/>
+                            <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}" alt="no pic to display"/><br>
+ <form method="post" enctype="multipart/form-data" action="{% url 'photo_list' %}">
+                                        <input type="file" name="pic"/>
                                             <br>
      Please Enter username before submit <input type="text" name="username" placeholder="username" required /><br>
       <input type="submit" />

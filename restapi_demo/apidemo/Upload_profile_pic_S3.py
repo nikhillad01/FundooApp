@@ -1,20 +1,12 @@
-from django.shortcuts import render
-from django.utils.datastructures import MultiValueDictKeyError
-from django.http import HttpResponse
-from . import services
+import self as self
+from services import redis_info
+import redis
+r = redis.StrictRedis(host='localhost', port=6379, db=0)
+a=redis_info.get_token(self,'token')
 
-"""This method is used to upload a cropped image to S3 bucket"""
-
-def profile_pic(request, path, username):
-
-
-        file=open(path, 'rb')   # image to upload with read access
-
-        key = username +'.jpeg'
-
-        try:
-                    # image name  in S3
-            services.s3.upload_fileobj(file, 'fundoo', Key=key)
-            return HttpResponse("Profile Photo Updated successfully")
-        except (MultiValueDictKeyError,Exception):  # handles error if no file is selected while submitting
-            return HttpResponse("Not valid")
+redis_info.set_token(self,'b','value of b')
+b=redis_info.get_token(self,'b')
+#print(a)
+print(b)
+r.delete(b)
+print(b)

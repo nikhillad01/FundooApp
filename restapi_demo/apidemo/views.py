@@ -1,6 +1,4 @@
 import json
-
-import redis
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -14,6 +12,8 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.contrib.auth import login
+from self import self
+from .services import redis_info
 from .models import Notes
 from .forms import SignupForm
 from django.utils.encoding import force_bytes, force_text
@@ -36,8 +36,6 @@ from rest_framework import status
 from .custom_decorators import custom_login_required
 from .models import Labels,Map_labels
 from django.db.models import Q
-from .redis_info import r
-
 import datetime
 
 def index(request):         # this is homepage.1
@@ -57,7 +55,7 @@ def profile_page(request):
 
 def logout(request):
     auth.logout(request)
-    r.flushall(asynchronous=False)
+    redis_info.flush_all(self)
     return render(request, 'login.html')
 
 def base(request):
@@ -193,15 +191,15 @@ def demo_user_login(request):
                            'password': password}
                 jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
                 j = jwt_token['token']
-                #messages.success(request, username)
+
                 res['message']="Logged in Successfully"
                 res['success']=True
-                cache.set('token', "token")
                 res['data'] =j
-                print(res)
-                r = redis.StrictRedis(host='localhost', port=6379, db=0)
-                r.set('token', res['data'])
-                print('from redis cache -----------',r.get('token'))
+
+                redis_info.set_token(self, 'token', res['data'])    # set the token to redis
+                #r.set('token', res['data'])     # sets token in redis cache
+
+
                 return render(request, 'in.html', {'token':res})   # renders to page with context=token
                 #return HttpResponseRedirect(reverse('getnotes'),content={"token":res})
             else:
@@ -240,22 +238,36 @@ def crop(request):
         print(e)
 
 
+
 def photo_list(request):
 
     """This method is used to upload a profile picture with cropping functionality"""
-    try:
-        if request.method == 'POST':
-            username = request.POST['username']
-            #print(username)
 
-            if username==request.user:          # if username is valid
-                form = PhotoForm(request.POST, request.FILES)           # django form
-                if form.is_valid():
-                    form.save()  # Saves the form.
-                    return redirect('photo_list')
-            else:
-                messages.error(request,'Invalid Username')
+    try:
+
+        if request.method == 'POST':
+            token = r.get('token')          # gets the token
+            token = token.decode(encoding='utf-8')  # converts bytes to string
+            decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])       # decodes JWT token to get values
+            user = User.objects.get(username=decoded_token['username'])     # gets the user.
+
+            username = request.POST['username']
+
+            #print('username=----',username)
+            #print('user =---',user)
+
+            print('in view to upload above valid method')
+            #if username==user:          # if username is valid
+            form = PhotoForm(request.POST, request.FILES)  # django form
+            if form.is_valid():
+                print('in valid')
+                form.save()  # Saves the form.
                 return redirect('photo_list')
+            else:
+                print('form is not valid')
+                messages.error(request,'Please select valid JPEG image')
+                #return redirect('photo_list')
+                return redirect('getnotes')
 
         else:
             form = PhotoForm()                  # renders to page with form
@@ -342,7 +354,7 @@ class getnotes(View):
             collab=[]
             for i in items:
                 collab.append(i['notes_id'])
-            #print('collab--------',collab)
+
 
             collab_notes=Notes.objects.filter(id__in=collab).values()
 
@@ -372,7 +384,7 @@ class getnotes(View):
 
             all_users=User.objects.filter(~Q(username=request.user.username)).values('username','id')
                # returns list of all user except the one who is requesting it .
-            print('all users',all_users)
+
 
 
 
@@ -945,10 +957,10 @@ def search(request):
     try:
         if request.method=='POST':
 
-            if request.POST['search_text']:         # if search field is not none
+            if request.POST['search_text']:                     # if search field is not none
 
-                token = r.get('token')  # gets the token from redis cache
-                token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+                token = r.get('token')                          # gets the token from redis cache
+                token = token.decode(encoding='utf-8')          # decodes the token ( from Bytes to str )
                 decoded_token = jwt.decode(token, 'secret_key',
                                            algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
                 user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
@@ -1000,13 +1012,13 @@ def reminder(request):
     }
 
     try:
-            token = r.get('token')                  # gets the token from redis cache
-            token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+            token = redis_info.get_token(self,'token')                  # gets the token from redis cache
+            token = token.decode(encoding='utf-8')                      # decodes the token ( from Bytes to str )
             decoded_token = jwt.decode(token, 'secret_key',
-                                       algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
+                                       algorithms=['HS256'])            # decodes JWT token and gets the values Username etc
             user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
 
-                                                # if request made from User.
+                                                                        # if request made from User.
             items = Notes.objects.filter(user=user).values()    # Gets all notes  for particular user.
 
             dates=[]                            # list to store only dates of every Note.
@@ -1041,7 +1053,6 @@ def reminder(request):
             return JsonResponse(json_list,safe=False)
 
 
-
     except Exception:
         messages.error(request, message=res['message'])
         return render(request,'in.html', {})
@@ -1074,11 +1085,15 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
         try:
             if pk and request.data['collaborate']:
 
+                token = redis_info.get_token(self,'token')
+                token = token.decode(encoding='utf-8')
+                decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
+                logged_in_user = User.objects.get(username=decoded_token['username'])
+
                 item = Notes.objects.get(id=pk)     # gets the Note
-
                 collab = request.data['collaborate']    # gets the user if to collaborate
-
                 user = User.objects.get(id=collab)      # gets the user from ID
+                email_to_send=user.email
 
                 if Notes.collaborate.through.objects.filter(user_id=user, notes_id=item.id):
 
@@ -1093,6 +1108,18 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
                     item.collaborate.add(user)
                     item.save()
                     res['message'] = "Collabrator added successfully"
+
+                    data = {
+                        'note_sender': logged_in_user,
+                        'domain': '127.0.0.1:8000',
+                    }
+
+                    message = render_to_string('Notes/collaborate_notification.html', data)
+                    mail_subject = 'shared a note with you'  # mail subject
+                    to_email = email_to_send  # mail id to be sent to
+                    email = EmailMessage(mail_subject, message,
+                                         to=[to_email])  # takes 3 args: 1. mail subject 2. message 3. mail id to send
+                    email.send()  # sends the mail
                     messages.success(request, message=res['message'])
                     return redirect(reverse('getnotes'))
 
@@ -1127,19 +1154,19 @@ class View_reminder(View):
             'success': False
         }
 
-        """This method is used to read all the notes from database."""
+
 
         try:
-                token = r.get('token')          # gets the token from redis cache
+                token = redis_info.get_token(self,'token')          # gets the token from redis cache
                 token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
                 decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])   # decodes JWT token and gets the values Username etc
                 user = User.objects.get(username=decoded_token['username']).pk          # gets the user from username
 
 
-                      # gets all the note and sort by created time
+                                                     # gets all the note and sort by created time
                 note_list = Notes.objects.filter(~Q(reminder=None), user=user).values().order_by('-created_time')  # shows note only added by specific user.
 
-                # Q used for complex queries ' ~ ' for negative condition
+                                                     # Q used for complex queries ' ~ ' for negative condition
 
                 paginator = Paginator(note_list, 9)  # Show 9 contacts per page
                 page = request.GET.get('page')
@@ -1162,7 +1189,7 @@ def change_color(request,pk):
 
     try:
         res = {
-            'message': 'No result found',  # Response Data
+            'message': 'No result found',           # Response Data
             'data': {},
             'success': False
         }
@@ -1172,7 +1199,7 @@ def change_color(request,pk):
 
             new_color = request.POST['change_color']
 
-            item.for_color=new_color        # changes color with new color
+            item.for_color=new_color                # changes color with new color
             item.save()
             res['message'] = "color changed"
 
@@ -1199,7 +1226,7 @@ def auto_delete_archive(request):
 
     try:
 
-        token = r.get('token')
+        token = redis_info.get_token(self,'token')
         token=token.decode(encoding='utf-8')
         decoded_token=jwt.decode(token, 'secret_key', algorithms=['HS256'])
         user=User.objects.get(username=decoded_token['username']).pk
@@ -1208,25 +1235,24 @@ def auto_delete_archive(request):
 
         note_list = Notes.objects.filter(~Q(archive_time=None),user_id=user, is_archived=True).values('archive_time','id','trash_time').order_by(
             '-created_time')
-        print('note lis-----',note_list)                                       # gets all the notes who's archive time is not None adn is_archive field is True
+                                                        # gets all the notes who's archive time is not None adn is_archive field is True
         for i in note_list:
-                                             # gets the archive_time for each note and add 15 days to it i.e. end_date
+                                                        # gets the archive_time for each note and add 15 days to it i.e. end_date
             end_date=i['archive_time'] + datetime.timedelta(days=15)
-            today=datetime.datetime.today().date()  # gets the today's date
+            today=datetime.datetime.today().date()      # gets the today's date
 
-            if end_date.date()==today:       # if end date and today's date are equal means 15 days over , then move the note to trash.
+            if end_date.date()==today:                  # if end date and today's date are equal means 15 days over , then move the note to trash.
 
                 item = Notes.objects.get(id=i['id'])    # gets the note by id
-                item.trash=True                 # moves to trash.
-                item.save()                     # saves the note.
+                item.trash=True                         # moves to trash.
+                item.save()                             # saves the note.
 
 
 
         trash_note_list = Notes.objects.filter(~Q(trash_time=None), user_id=user,trash=True).values(
-            'id', 'trash_time').order_by(
-            '-created_time')
-        print('trash list ------',trash_note_list)
-        # gets all the notes who's trash time is not None and trash field is True
+                                                                                                    'id', 'trash_time').order_by(
+                                                                                                    '-created_time')
+
 
         for j in trash_note_list:
             # gets the trash_time for each note and add 15 days to it i.e. end_date
@@ -1266,7 +1292,7 @@ def invite(request):
     try:
         if request.POST['email']:
 
-            token = r.get('token')
+            token = redis_info.get_token(self,'token')
             token = token.decode(encoding='utf-8')
             decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
             user = User.objects.get(username=decoded_token['username'])
@@ -1280,11 +1306,11 @@ def invite(request):
             }
 
             message = render_to_string('invite.html', data)
-            mail_subject = 'Fundoo Invitation'  # mail subject
-            to_email = email_user # mail id to be sent to
+            mail_subject = 'Fundoo Invitation'      # mail subject
+            to_email = email_user                   # mail id to be sent to
             email = EmailMessage(mail_subject, message,
-                                 to=[to_email])  # takes 3 args: 1. mail subject 2. message 3. mail id to send
-            email.send()  # sends the mail
+                                 to=[to_email])     # takes 3 args: 1. mail subject 2. message 3. mail id to send
+            email.send()                            # sends the mail
 
             res['message']="Invitation sent successfully"
             messages.success(request, message=res['message'])

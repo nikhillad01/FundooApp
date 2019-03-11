@@ -42,6 +42,7 @@
 <script>
 $(document).ready(function(){
   $('.dropdown-submenu a.test').on("click", function(e){
+    console.log("toggle button clicked");
     <!--$(this).next('ul').toggle();-->
     <!--e.stopPropagation();-->
     <!--e.preventDefault();-->
@@ -86,7 +87,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                     </button>
                     <div  class="navbar-brand">
                         <a id="menu-toggle" href="#" class="glyphicon glyphicon-align-justify btn-menu toggle">
-                        <a id="fundoo-img" class="navbar-brand" href="#">
+                        <a id="fundoo-img" class="navbar-brand" href="#" style="width:90px;">
                         <img src="https://www.gstatic.com/images/branding/product/1x/keep_48dp.png" width="40" height="40" class="d-inline-block align-top" alt="" align="left" hspace="35">
                         </a>
                         </a>
@@ -134,7 +135,7 @@ localStorage.setItem('token', ("{{token.data}}"));
      <div class="btn btn-circle btn-xl" style="margin-left: 1000px;margin-top:-55px;"  data-toggle="tooltip" data-placement="bottom" title="Account Details">
 
         <button type="button" class="btn btn-circle btn-lg   " data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="margin-left:170px;margin-top:-100px;height:20px;width:20px;">
-          <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" width="25" height="28">
+          <img src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}" width="25" height="28">
         </button>
              <ul class="dropdown-menu dropdown-menu-right" style="font-family: Roboto;">
               <li class="dropdown-header">Basic Info</li>
@@ -142,7 +143,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                  <!--class to display user info-->
 
                   <div class="card" style="width:270px height:50px font-family: Roboto;">
-                    <img class="card-img-top btn-circle btn-xl" src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}.jpeg" alt="Card image" width="60" height="65">
+                    <img class="card-img-top btn-circle btn-xl" src="https://s3.ap-south-1.amazonaws.com/fundoo/{{ user.username }}" alt="Card image" width="60" height="65">
                     <div class="card-body">
                         <b><h5 class="card-title">{{ user.username }}</h5></b>
                       <p class="card-text">{{ user.email }}</p>
@@ -169,7 +170,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
     <!--hr tag to print line-->
 
-        <div class="sep">
+        <div class="sep" style="padding-left:0px;width:835px;">
 
         <hr id="divider"><div class="sepText"></div>
         </div>
@@ -185,7 +186,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 {% endif %}
         <!-- Sidebar -->
 
-     <div id="sidebar-wrapper" style="font-family:Roboto;">
+     <div id="sidebar-wrapper" style="font-family:Roboto;margin-top:50px;">
             <nav id="spy">
                 <ul class="sidebar-nav nav">
 
@@ -309,13 +310,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                                     <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
                                          <label>Remainder</label>
-                                      <!--<select name="reminder" >-->
-                                        <!--<option value="" selected disabled hidden>Choose here</option>-->
-                                        <!--<option value="Today">Today</option>-->
-                                          <!--<option value="Tomorow">Tomorow</option>-->
-                                          <!--<option value="Next Week">Next Week</option>-->
-                                          <!--<option value="Next Month" selected>Next Month</option>-->
-                                        <!--</select>-->
+
 
                                 <div class="row">
                                     <div class='col-sm-6'>
@@ -453,7 +448,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                  <!--suspected div   -->
 
 
-                     <div  class="dropdown" >
+                     <div  class="dropdown" style="margin-top:100px;">
 
                         <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 5px;font-family:Roboto;margin-right:100px;" data-toggle="tooltip" data-placement="bottom" title="Reminder">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="remainder">
@@ -462,17 +457,23 @@ localStorage.setItem('token', ("{{token.data}}"));
                                      </svg>
                                      </button>
 
-                                    <ul class="dropdown-menu" aria-labelledby="remainderMenu1" >
+                                     <ul class="dropdown-menu" aria-labelledby="remainderMenu1" style=" margin-left: -17px; margin-top: -22px;">
                                          <label>Remainder</label>
-                                      <select name="reminder" >
-                                        <option value="" selected disabled hidden>Choose here</option>
-                                        <option value="Today">Today</option>
-                                          <option value="Tomorow">Tomorow</option>
-                                          <option value="Next Week">Next Week</option>
-                                          <option value="Next Month" selected>Next Month</option>
-                                        </select>
 
-                                     </ul>
+
+                                <div class="row">
+                                    <div class='col-sm-6'>
+                                        <div class="form-group">
+                                            <div class='input-group date' id='datetimepicker2'>
+                                                <input type='text' class="form-control" name="reminder1" id="reminder1" />
+                                                <span class="input-group-addon">
+                                                    <span class="glyphicon glyphicon-calendar"></span>
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
                      </div>
 
 
@@ -506,13 +507,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                                          </form>
                                      </ul>
 
-
-
-
                                  </div>
-
-
-
 
 
                                   <!--color-->
@@ -564,7 +559,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                  {% for l in all_map %}
                     {% if l.note_id == i.id %}
-                    <span class="badge" style="margin-top: -42px;">{{l.label_id}}
+                    <span class="badge" style="margin-top: -320px;">{{l.label_id}}
                     </span>
 
                     {% endif %}
@@ -574,23 +569,23 @@ localStorage.setItem('token', ("{{token.data}}"));
 
             <!--Reminder Badge-->
                  {% if i.reminder != None%}
-                 <span class="badge" >{{i.reminder}}
+                 <span class="badge" style="margin-top: -250px;margin-left:-18px;" >{{i.reminder}}
                     </span>
                  {% endif %}
 
 
 
                   <!--More Options-->
-                 <div class="dropdown  show dropleft" style="width:20px;top:-30px;" >
-                        <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="padding-left:240px;width:20px;">
-                            <span class="glyphicon glyphicon-option-vertical" style="padding-left:130px;width:20px;top:-17px"></span>
+                 <div class="dropdown  show dropleft" style="top:-150px;margin-left:25px;" >
+                        <a class="btn-xs   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="margin-left:140px;width:20px;">
+                            <span class="glyphicon glyphicon-option-vertical" style="margin-left:150px;width:2px;top:-17px"></span>
                           </a>
                             <ul class="dropdown-menu dropleft">
-                                 <a class="dropdown-item" href="{% url 'copy_note' i.id %}" style="padding-left:100px;">Copy note</a>
-                                <a class="dropdown-item" href="{% url 'move_to_trash' i.id %}" style="padding-left:100px;width:20;">Trash</a>
-                            <a class="dropdown-item" href="{% url 'updatenote' i.id %}" style="padding-left:100px;">Update</a>
-                            <a class="dropdown-item" href="{% url 'updateform' i.id %}" style="padding-left:100px;">New Update</a>
-                              <a class="dropdown-item" href="{% url 'delete_forever' i.id %}" style="padding-left:100px;">Delete Forever</a>
+                                 <a class="dropdown-item" href="{% url 'copy_note' i.id %}" style="margin-left:0px;">Copy note</a>
+                                <a class="dropdown-item" href="{% url 'move_to_trash' i.id %}" style="margin-left:0px;width:20;">Trash</a>
+                            <a class="dropdown-item" href="{% url 'updatenote' i.id %}" style="margin-left:0px;">Update</a>
+                            <a class="dropdown-item" href="{% url 'updateform' i.id %}" style="margin-left:0px;">New Update</a>
+                              <a class="dropdown-item" href="{% url 'delete_forever' i.id %}" style="margin-left:0px;">Delete Forever</a>
 
 
 
@@ -598,7 +593,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
                               <li class="dropdown-submenu "  >
-                                <a class="test"  href="#" style="padding-left:100px;">Add Label</a>
+                                <a class="test"  href="#" style="margin-left:0px;">Add Label</a>
                                 <ul class="dropdown-menu">
                                     {% for k in labels %}
 
@@ -609,7 +604,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                               </li>
                             </ul>
                  </div>
-</div>
+        </div>
             </article> </div>
 
     {% endfor %}
@@ -864,10 +859,14 @@ $(document).ready(function(){
 $(document).ready(function(){
 
   $('#menu-toggle').on("click", function(e){
-    $(this).next('ul').toggle();
+    $(this).parent().next('ul').toggle();
+
+    console.log("toggle button clicked");
+    console.log($(this).next('ul'));
+     $(this).parent().next('#wrapper').toggle();
     e.stopPropagation();
     e.preventDefault();
-    console.log("toggle");
+
   });
 });
 </script>
@@ -988,7 +987,15 @@ $( document ).ready(function() {
 });
 </script>
 
-
+<script type="text/javascript">
+$( document ).ready(function() {
+    $('#datetimepicker2').datepicker({
+        dateFormat: 'yy-mm-dd' ,
+        autoclose: true,
+        todayHighlight: true
+  }).datepicker('update', new Date());
+});
+</script>
 <!--Script to show reminders as notifications-->
 <script>
     $(document).ready(function(){
@@ -1001,7 +1008,7 @@ $( document ).ready(function() {
     <!--console.log(data);-->
     var d=data
     console.log(d);
-     $('#ac').html(d);
+     <!--$('#ac').html(d);-->
      var testList=$("<ul></ul>");
       $(testList).append("<b>Reminders for coming two days</b><br>");
     for(i=0;i<d.length;i++){

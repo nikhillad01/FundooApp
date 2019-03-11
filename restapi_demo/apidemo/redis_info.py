@@ -1,4 +1,5 @@
 import redis
+
 """This file contains details about redis connection 
 
     StrictRedis does not provide compatibility for older versions of redis.py
@@ -8,3 +9,4 @@ import redis
 
 
 r= redis.StrictRedis(host='localhost', port=6379, db=0)
+#print(r.get('token'))
