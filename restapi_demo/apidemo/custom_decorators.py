@@ -1,15 +1,26 @@
+"""
+* Purpose:This file contains all the custom created decorators which are
+          required in project
+
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 11-3-2019
+
+"""
+
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.shortcuts import redirect
 from django.urls import reverse
-from .redis_info import r
+from self import self
+from .services import redis_info
 import jwt
 
 def custom_login_required(function=None,login_url =''):
     try:
         def is_login(u):
-            token = r.get('token')  # gets the token from redis cache
+            token = redis_info.get_token(self,'token')  # gets the token from redis cache
             token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
             decoded_token = jwt.decode(token, 'secret_key',
                                        algorithms=['HS256'])  # decodes JWT token and gets the values Username etc

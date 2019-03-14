@@ -1,3 +1,9 @@
+"""
+* Purpose:  Serializers
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 01-1-2019
+"""
 from django.forms import forms
 from rest_framework import serializers
 from django.contrib.auth import get_user_model

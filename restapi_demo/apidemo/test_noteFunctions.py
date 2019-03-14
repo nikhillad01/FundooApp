@@ -1,6 +1,12 @@
+"""
+* Purpose:This file contains all the custom created decorators which are
+          required in project
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 11-3-2019
+"""
 #import pytest
 from django.test.client import encode_multipart
-
 from .models import Notes
 import django
 django.setup()

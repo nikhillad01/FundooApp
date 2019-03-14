@@ -1,3 +1,9 @@
+"""
+* Purpose: Used to create token
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 01-1-2019
+"""
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.utils import six
 

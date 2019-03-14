@@ -170,7 +170,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
     <!--hr tag to print line-->
 
-        <div class="sep" style="padding-left:0px;width:835px;">
+        <div class="sep" style="width:840px;">
 
         <hr id="divider"><div class="sepText"></div>
         </div>
@@ -231,9 +231,9 @@ localStorage.setItem('token', ("{{token.data}}"));
                         <a href="#" style="margin-right:5%;">
                         <span class="glyphicon glyphicon-tag"></span>
                         <!--<span class="fa fa-anchor solo"><b>-->
-                            <span class="fa fa-anchor solo" ><a style="margin-top:-40px;" href="{% url 'view_notes_for_each_label' p.id user.id %}"><b>{{p}}</b></a>
+                            <span class="fa fa-anchor solo" ><a style="margin-top:-40px;" href="{% url 'view_notes_for_each_label' p.id  %}"><b>{{p}}</b></a></span>
 
-                        </a></span>
+
                             <!--<span class="fa fa-anchor solo"><b>{{i}}</b></span>-->
 
                         </a>
@@ -800,12 +800,13 @@ localStorage.setItem('token', ("{{token.data}}"));
 
                  {% for l in all_map %}
                     {% if l.note_id == i.id %}
+
                         <span class="badge" style="margin-top: -42px;">{{l.label_id}}</span>
+                        <i class="fa fa-times" aria-hidden="true">  <a href="{% url 'remove_labels' l.id i.id %}"></a></i>
 
                     {% endif %}
-
-
                  {% endfor %}
+
                   <!--More Options-->
                  <div class="dropdown  show dropleft" style="width:5px;margin-top:10px;margin-right:110px;" >
                         <a class="btn-s   dropdown-toggle" href="#" id="dropdownMenuLink" data-toggle="dropdown"  style="margin-left:145px;margin-top:10px;">

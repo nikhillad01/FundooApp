@@ -104,11 +104,11 @@ urlpatterns = [
     #delete_label
     path('delete_label/<int:pk>/', views.delete_label, name='delete_label'),
     #view_notes_for_each_label
-    path('view_notes_for_each_label/<int:pk>/<int:id>/', views.view_notes_for_each_label, name='view_notes_for_each_label'),
+    path('view_notes_for_each_label/<int:pk>/', views.view_notes_for_each_label, name='view_notes_for_each_label'),
     #copy_note
     path('copy_note/<int:pk>/', views.copy_note, name='copy_note'),
     #remove_labels
-    path('remove_labels/<int:pk>/<int:id>/<int:key>/', views.remove_labels, name='remove_labels'),
+    path('remove_labels/<int:id>/<int:key>/', views.remove_labels, name='remove_labels'),
 
 
     # <a href="{% url 'remove_labels' l.label_id  user.id i.id %}" >&times;</a>
@@ -136,6 +136,9 @@ urlpatterns = [
 
     #invite
     path('invite/', views.invite, name='invite'),
+
+    #delete_from_s3
+    #path('delete_from_s3/', views.delete_from_s3, name='delete_from_s3'),
 ]
 
 

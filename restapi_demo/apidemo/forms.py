@@ -1,6 +1,12 @@
-from django.contrib import messages
+"""
+* Purpose:  Forms
+
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 01-2-2019
+
+"""
 from django.contrib.auth import get_user_model
-from django.shortcuts import redirect
 from image import settings
 from requests import request
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm

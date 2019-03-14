@@ -1,3 +1,11 @@
+"""
+* Purpose:  Models (Database Interaction)
+
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 01-1-2019
+
+"""
 from django.contrib.auth.models import User
 from django.db import models
 from django.core.validators import FileExtensionValidator

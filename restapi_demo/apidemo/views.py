@@ -1,4 +1,10 @@
-import json
+"""
+* Purpose:  Project API's
+* @author: Nikhil Lad
+* @version: 3.7
+* @since: 01-1-2019
+"""
+import boto3
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -29,7 +35,6 @@ from .serializers import registrationSerializer
 from rest_framework.generics import CreateAPIView, UpdateAPIView
 from .forms import PhotoForm
 from django.shortcuts import render, redirect
-from django.core.cache import cache
 from django.core.paginator import Paginator
 from .serializers import NoteSerializer
 from rest_framework import status
@@ -37,6 +42,7 @@ from .custom_decorators import custom_login_required
 from .models import Labels,Map_labels
 from django.db.models import Q
 import datetime
+import os
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -61,6 +67,8 @@ def logout(request):
 def base(request):
     return render(request, 'in.html')
 
+def open_upload_form(request):
+    return render(request, 'fileupload.html', {})
 
 User= get_user_model()          # will retrieve the USER model class.
 
@@ -117,7 +125,7 @@ def Signup(request):
                 data = {                        # renders to html with variables
                     #"urlsafe_base64_encode" takes user id and generates the base64 code(uidb64).
                     'user': user,
-                    'domain':'http://127.0.0.1:8000',
+                    'domain':os.getenv("DOMAIN"),
                     #'uid': urlsafe_base64_encode(force_bytes(user.pk)),    # encodes
                     'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),  # coz django 2.0.0 to convert it to string
                     'token': account_activation_token.make_token(user),  # creates a token
@@ -126,14 +134,14 @@ def Signup(request):
                 mail_subject = 'Activate your Fundoo account.'  # mail subject
                 to_email = form.cleaned_data.get('email')       # mail id to be sent to
                 email = EmailMessage(mail_subject, message, to=[to_email])   # takes 3 args: 1. mail subject 2. message 3. mail id to send
-                email.send()        # sends the mail
+                email.send()                                    # sends the mail
                 return HttpResponse('Please confirm your email address to complete the registration')
 
         else:
             form = SignupForm()
         return render(request, 'signup.html', {'form': form})       # if  GET request
 
-    except Exception as e :
+    except Exception as e:
         print(e)
 
 
@@ -163,6 +171,7 @@ def login_v(request):               # renders to login page.
 
 
 
+
 @require_POST
 @permission_classes([AllowAny, ])
 def demo_user_login(request):
@@ -176,47 +185,41 @@ def demo_user_login(request):
     """ This method is used to log in user """
 
     try:
-        username = request.POST.get('username')             # takes the username from request
-        password = request.POST.get('password')             # takes password from request .
-        if username is None:
-            raise Exception('Username is required')
-        if password is None:
-            raise Exception('Password is required')
-        print(username, password)
-        user = authenticate(username=username, password=password)       # checks if username and password are available in DB.
-        if user:
-            if user.is_active:
-                login(request, user)
-                payload = {'username': username,
-                           'password': password}
-                jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
-                j = jwt_token['token']
+        if request.POST.get('username') and request.POST.get('password'):
+            username = request.POST.get('username')             # takes the username from request
+            password = request.POST.get('password')             # takes password from request .
 
-                res['message']="Logged in Successfully"
-                res['success']=True
-                res['data'] =j
+            user = authenticate(username=username, password=password)       # checks if username and password are available in DB.
+            if user:
+                if user.is_active:
+                    login(request, user)
+                    payload = {'username': username,
+                               'password': password}
+                    jwt_token = {'token': jwt.encode(payload, "secret_key", algorithm='HS256').decode()}    # creates the token using payload String Token
+                    j = jwt_token['token']
 
-                redis_info.set_token(self, 'token', res['data'])    # set the token to redis
-                #r.set('token', res['data'])     # sets token in redis cache
+                    res['message']="Logged in Successfully"
+                    res['success']=True
+                    res['data'] =j
+
+                    redis_info.set_token(self, 'token', res['data'])    # set the token to redis
 
 
-                return render(request, 'in.html', {'token':res})   # renders to page with context=token
-                #return HttpResponseRedirect(reverse('getnotes'),content={"token":res})
+                    return render(request, 'in.html', {'token': res})   # renders to page with context=token
+
+                else:
+                    res['message'] = "Your account was inactive."
+                    return render(request, 'in.html', res)
+
             else:
-                res['message'] = "Your account was inactive."
-                return render(request, 'in.html', res)
-
-        else:
-            res['message'] = 'Username or Password is not correct' #Invalid login details
-            messages.error(request, 'Invalid login details')
-            return render(request, 'login.html', context=res)
+                res['message'] = 'Username or Password is not correct' #Invalid login details
+                messages.error(request, 'Invalid login details')
+                return render(request, 'login.html', context=res)
     except Exception as e:
         print(e)
         return render(request, 'login.html', context=res)
 
 
-def open_upload_form(request):
-    return render(request, 'fileupload.html', {})
 
 
 @require_POST
@@ -225,7 +228,7 @@ def upload_profile(request):
 
     """ This method is used to upload a profile picture to S3 bucket """
     try:
-        #profile_pic(request)                      # calls profile_pic upload method from S3 Upload file.
+                              # calls profile_pic upload method from S3 Upload file.
         messages.success(request, "Profile Pic updated")    # returns success message
         return render(request, 'profile.html')
     except Exception as e:
@@ -246,15 +249,14 @@ def photo_list(request):
     try:
 
         if request.method == 'POST':
-            token = r.get('token')          # gets the token
+            token = redis_info.get_token(self, 'token')          # gets the token
             token = token.decode(encoding='utf-8')  # converts bytes to string
             decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])       # decodes JWT token to get values
             user = User.objects.get(username=decoded_token['username'])     # gets the user.
 
             username = request.POST['username']
 
-            #print('username=----',username)
-            #print('user =---',user)
+
 
             print('in view to upload above valid method')
             #if username==user:          # if username is valid
@@ -300,7 +302,7 @@ class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
                 'data': {},
                 'success': False
             }
-            print('------------',request.data['collaborate'])
+
             serializer = NoteSerializer(data=request.data)  # takes the data from form.
             # check serialized data is valid or not
 
@@ -330,7 +332,7 @@ class getnotes(View):
         except Exception as e:
             print(e)
 
-        #""" This method is used to read all notes """
+        # This method is used to read all notes
 
         res = {
             'message': 'Something bad happened',    # Response Data
@@ -347,7 +349,7 @@ class getnotes(View):
             new_note_list = Notes.objects.filter(user=request.user, trash=False, is_archived=False).values('title',
                                                                                                           'description',
                                                                                                        'is_pinned','collaborate').order_by(
-                '-created_time')  # shows note only added by specific user.
+                                                                                                         '-created_time')  # shows note only added by specific user.
 
             items=Notes.collaborate.through.objects.filter(user_id=request.user).values()
 
@@ -376,8 +378,6 @@ class getnotes(View):
             for i in new_note_list:
                 data.append(i)
 
-            d=data
-
 
             all_labels=Labels.objects.all()
             all_map=Map_labels.objects.all()
@@ -403,9 +403,9 @@ class updatenote(UpdateAPIView):
 
     def put(self, request, pk):
         try:
-
-            serializer = NoteSerializer(data=request.data)
             """This method is used to update the notes"""
+            serializer = NoteSerializer(data=request.data)
+
 
             res = {
                 'message': 'Something bad happened',    # response information
@@ -578,26 +578,26 @@ def pin_unpin(request,pk):
 
 @custom_login_required
 def trash(request,id):
-    print('----------------------trash')
+
     """This method is used to push item to trash
     pk: Primary key
     """
+
     try:
         if id:
             item=Notes.objects.get(id=id)
 
-            if item.trash==False or item.trash==None:
-                print('in trash ------------------------------')
-                item.trash=True         # if trash field is None or False, make note trash
-                item.trash_time=datetime.datetime.now()
-                print('-------------Trash Time',item.trash_time)
+            if item.trash:
+                item.trash = False
+                item.save()
+                messages.success(request, message='item restored')
+                return redirect(reverse('getnotes'))
+
+            elif item.trash==False or item.trash==None:          # if item already in trash restore it.
+                item.trash = True  # if trash field is None or False, make note trash
+                item.trash_time = datetime.datetime.now()
                 item.save()
                 messages.success(request, message='Item moved to trash')
-                return redirect(reverse('getnotes'))
-            elif item.trash==True:          # if item already in trash restore it.
-                item.trash=False
-                item.save()
-                messages.success(request,message='item restored')
                 return redirect(reverse('getnotes'))
         else:
             messages.error('Invalid Details')
@@ -685,24 +685,27 @@ def is_archived(request,pk):
     try:
         if pk:
             item = Notes.objects.get(id=pk)
-            if item.is_archived == False or item.is_archived == None:      # if archive field is false or None.
-                item.is_archived = True                 # make note archive
-                item.archive_time=datetime.datetime.now()
-                item.save()
-                messages.success(request, message='Item is archived')
-                return redirect(reverse('getnotes'))
-            elif item.is_archived == True:          # it item is already archived
+
+            if item.is_archived:      # if archive field is false or None.
                 item.is_archived = False
-                item.archive_time=None
+                item.archive_time = None
                 item.save()
                 messages.success(request, message='Removed from archived')
                 return redirect(reverse('getnotes'))
+
+            elif item.is_archived== False or item.is_archived == None:          # it item is already archived
+                item.is_archived = True  # make note archive
+                item.archive_time = datetime.datetime.now()
+                item.save()
+                messages.success(request, message='Item is archived')
+                return redirect(reverse('getnotes'))
+
         else:
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
     except Exception as e:
-        return  HttpResponse(res)
+        return HttpResponse(res)
 
 
 
@@ -734,7 +737,7 @@ class View_is_archived(View):
                   # gets all the note and sort by created time
             note_list = Notes.objects.filter(user=request.user, is_archived=True).order_by('-created_time')  # shows note only added by specific user.
 
-            print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@',note_list)
+
             paginator = Paginator(note_list, 9)  # Show 9 contacts per page
             page = request.GET.get('page')
             notelist = paginator.get_page(page)
@@ -833,7 +836,7 @@ def delete_label(request,pk):
 
 
 @custom_login_required
-def view_notes_for_each_label(request, pk, id):
+def view_notes_for_each_label(request, pk):
 
     """This method is used to view all notes associated with each label"""
 
@@ -845,24 +848,27 @@ def view_notes_for_each_label(request, pk, id):
 
     try:
 
-        if pk and id:            # if pk and id is not None.
+        if pk:            # if pk and id is not None.
+            token = redis_info.get_token(self, 'token')  # gets the token from redis cache
+            token = token.decode(encoding='utf-8')  # decodes the token from bytes to string
+            decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])  # decodes the JWT token
+            user = User.objects.get(username=decoded_token['username']).pk  # gets the PK of user from token's username
+
 
             label_id=pk         # sets the pk and id tp label and user id
-            user_id=id
 
-            note_list = Map_labels.objects.filter(user_id=user_id, label_id=label_id).values('id', 'label_id', 'user_id',
+            note_list = Map_labels.objects.filter(user_id=user, label_id=label_id).values('id', 'label_id', 'user_id',
                                                                                              'note_id')
 
             ids = []    # list to store ids of all note_ids associated with particular label and user.
             for i in note_list:
-                # print(i['note_id'])
+
                 ids.append(i['note_id'])
 
 
             """ id_in  parameter checks for all the ids in list and gets  all the data of it """
 
-            data = Notes.objects.filter(id__in=ids).values('title', 'description', 'reminder', 'is_archived', 'is_deleted',
-                                                           'for_color', 'trash', 'is_pinned', 'label', 'collaborate', 'user')
+            newnotelist = Notes.objects.filter(id__in=ids).values()
 
             paginator = Paginator(note_list, 9)  # Show 9 contacts per page
             page = request.GET.get('page')
@@ -871,8 +877,8 @@ def view_notes_for_each_label(request, pk, id):
             res['message'] = "All Trash Notes"
             res['success'] = True
             res['data'] = notelist
-            print(note_list)
-            return render(request, 'in.html', {'label_notes': data})
+
+            return render(request, 'in.html', {'notelist': newnotelist})
 
         else:
             messages.success(request, message=res['message'])
@@ -918,7 +924,7 @@ def copy_note(request,pk):
 
 
 @custom_login_required
-def remove_labels(request,pk,id,key,*args,**kwargs):
+def remove_labels(request,id,key,*args,**kwargs):
 
     """This method is used to remove the label from particular note"""
 
@@ -929,11 +935,15 @@ def remove_labels(request,pk,id,key,*args,**kwargs):
     }
 
     try:
-        if pk and id and key:      # if all details are provided
+        if id and key:      # if all details are provided
+            token = redis_info.get_token(self, 'token')  # gets the token from redis cache
+            token = token.decode(encoding='utf-8')  # decodes the token from bytes to string
+            decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])  # decodes the JWT token
+            user = User.objects.get(username=decoded_token['username']).pk  # gets the PK of user from token's username
 
             # gets the specific item .
 
-            item = Map_labels.objects.get(user_id=pk, label_id=key, note_id=id)
+            item = Map_labels.objects.get(user_id=user, label_id=key, note_id=id)
             item.delete()       # gets the item and delete it.
             return redirect(reverse('getnotes'))
 
@@ -946,7 +956,7 @@ def remove_labels(request,pk,id,key,*args,**kwargs):
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
-
+@require_POST
 @custom_login_required
 def search(request):
     res = {
@@ -955,11 +965,9 @@ def search(request):
         'success': False
     }
     try:
-        if request.method=='POST':
-
             if request.POST['search_text']:                     # if search field is not none
 
-                token = r.get('token')                          # gets the token from redis cache
+                token = redis_info.get_token(self,'token')                          # gets the token from redis cache
                 token = token.decode(encoding='utf-8')          # decodes the token ( from Bytes to str )
                 decoded_token = jwt.decode(token, 'secret_key',
                                            algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
@@ -970,19 +978,20 @@ def search(request):
 
                 # __contains checks if text is present in a field of model
 
-                note_list=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text),user=user)
+                newnotelist=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text),user=user)
 
-                if note_list:       # if note_list is not blank
+                if newnotelist:       # if note_list is not blank
 
-                    paginator = Paginator(note_list, 9)  # Show 9 contacts per page
+                    paginator = Paginator(newnotelist, 9)  # Show 9 contacts per page
                     page = request.GET.get('page')
                     notelist = paginator.get_page(page)
 
                     res['message'] = "Search Notes"
                     res['success'] = True
                     res['data'] = notelist
-
-                    return render(request, 'in.html', {'notelist': note_list})
+                    #return redirect('in.html')
+                    print('------------------------------------------')
+                    return render(request, 'in.html', {'notelist': newnotelist})
                 else:
                     res['message']="No results found"
                     messages.error(request, message=res['message'])
@@ -1111,7 +1120,7 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
 
                     data = {
                         'note_sender': logged_in_user,
-                        'domain': '127.0.0.1:8000',
+                        'domain': os.getenv("DOMAIN"),
                     }
 
                     message = render_to_string('Notes/collaborate_notification.html', data)
@@ -1226,14 +1235,14 @@ def auto_delete_archive(request):
 
     try:
 
-        token = redis_info.get_token(self,'token')
-        token=token.decode(encoding='utf-8')
-        decoded_token=jwt.decode(token, 'secret_key', algorithms=['HS256'])
-        user=User.objects.get(username=decoded_token['username']).pk
+        token = redis_info.get_token(self,'token')      # gets the token from redis cache
+        token=token.decode(encoding='utf-8')            # decodes the token from bytes to string
+        decoded_token=jwt.decode(token, 'secret_key', algorithms=['HS256'])     # decodes the JWT token
+        user=User.objects.get(username=decoded_token['username']).pk        # gets the PK of user from token's username
 
 
 
-        note_list = Notes.objects.filter(~Q(archive_time=None),user_id=user, is_archived=True).values('archive_time','id','trash_time').order_by(
+        note_list = Notes.objects.filter(~Q(archive_time=None), user_id=user, is_archived=True).values('archive_time','id','trash_time').order_by(
             '-created_time')
                                                         # gets all the notes who's archive time is not None adn is_archive field is True
         for i in note_list:
@@ -1302,7 +1311,7 @@ def invite(request):
 
             data = {
                 'user': user,
-                'domain': '127.0.0.1:8000',
+                'domain': os.getenv("DOMAIN"),
             }
 
             message = render_to_string('invite.html', data)
@@ -1324,3 +1333,5 @@ def invite(request):
     except Exception :
         messages.error(request, message=res['message'])
         return redirect(reverse('getnotes'))
+
+
