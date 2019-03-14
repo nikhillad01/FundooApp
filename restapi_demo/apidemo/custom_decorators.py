@@ -19,14 +19,18 @@ import jwt
 
 def custom_login_required(function=None,login_url =''):
     try:
-        def is_login(u):
+        def is_login(request):
+
             token = redis_info.get_token(self,'token')  # gets the token from redis cache
             token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
             decoded_token = jwt.decode(token, 'secret_key',
                                        algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
             user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
+            # request.user = user
+            print('---Deco----',request)
             return User.objects.filter(pk=user).exists()     # if user is present in DB.
         actual_decorator = user_passes_test(is_login)           # user_passes_test to check if some test passes or not
+
         if function:
             return actual_decorator(function)
         else:

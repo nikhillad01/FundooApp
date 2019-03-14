@@ -7,10 +7,11 @@
 import boto3
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.decorators import method_decorator
 from django.views import View
 from django.views.decorators.http import require_POST
-from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse
+from django.http import HttpResponsePermanentRedirect, HttpResponseRedirect, JsonResponse, request
 from django.urls import reverse
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import AllowAny
@@ -43,6 +44,7 @@ from .models import Labels,Map_labels
 from django.db.models import Q
 import datetime
 import os
+from . import services
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -917,7 +919,7 @@ def copy_note(request,pk):
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-    except Exception as e:              # if any exception occurs redirect to getnotes
+    except (KeyboardInterrupt, MultiValueDictKeyError, Exception) as e:              # if any exception occurs redirect to getnotes
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
@@ -952,11 +954,11 @@ def remove_labels(request,id,key,*args,**kwargs):
             messages.error(request,res['message'])
             return redirect(reverse('getnotes'))
 
-    except Exception:
+    except (KeyboardInterrupt,MultiValueDictKeyError,Exception):
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
-@require_POST
+
 @custom_login_required
 def search(request):
     res = {
@@ -978,31 +980,46 @@ def search(request):
 
                 # __contains checks if text is present in a field of model
 
-                newnotelist=Notes.objects.filter(Q(title__contains=search_text) | Q(description__contains=search_text),user=user)
+                new_notelist=Notes.objects.filter(Q(title__contains=search_text),user=user).values()
 
-                if newnotelist:       # if note_list is not blank
+                if new_notelist:       # if note_list is not blank
 
-                    paginator = Paginator(newnotelist, 9)  # Show 9 contacts per page
+                    paginator = Paginator(new_notelist, 9)  # Show 9 contacts per page
                     page = request.GET.get('page')
                     notelist = paginator.get_page(page)
 
-                    res['message'] = "Search Notes"
+                    #res['message'] = "Search Notes"
                     res['success'] = True
                     res['data'] = notelist
                     #return redirect('in.html')
-                    print('------------------------------------------')
-                    return render(request, 'in.html', {'notelist': newnotelist})
+                    #print('NMotes------------------------------------------',new_notelist)
+                    data=[]
+                    for i in new_notelist:
+                        data.append(i)
+                    if request.is_ajax:
+                    #
+                    #return HttpResponse("daas")
+                        print('ajax request')
+
+                        #return render_to_string("in.html",{'not_list': new_notelist})
+                        #return JsonResponse(data,safe=False)
+                        return render(request, 'in.html', {'not_list': new_notelist})
+                    else:print('not ajax')
                 else:
                     res['message']="No results found"
+                    print('')
                     messages.error(request, message=res['message'])
                     return redirect(reverse('getnotes'))
 
             else:
+                res['message']="no data"
                 messages.error(request, message=res['message'])
+                print('no post')
                 return redirect(reverse('getnotes'))
 
-    except Exception as e:
-         print("Exception",e)
+    except (KeyboardInterrupt,MultiValueDictKeyError,Exception) as e:
+         print("Exception---------------",e)
+         res['message']="vacva"
          messages.error(request, message=res['message'])
          return redirect(reverse('getnotes'))
 
@@ -1062,7 +1079,7 @@ def reminder(request):
             return JsonResponse(json_list,safe=False)
 
 
-    except Exception:
+    except (MultiValueDictKeyError,KeyboardInterrupt,ValueError,Exception):
         messages.error(request, message=res['message'])
         return render(request,'in.html', {})
 
@@ -1077,7 +1094,7 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
     try:
         serializer_class = NoteSerializer
 
-    except Exception as e:
+    except (KeyboardInterrupt,MultiValueDictKeyError,Exception) as e:
 
         print(e)
 
@@ -1334,4 +1351,25 @@ def invite(request):
         messages.error(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
+@custom_login_required
+def delete_from_s3(request):
+    res = {
+        'message': 'Something Bad Happened',  # Response Data
+        'data': {},
+        'success': False
+    }
+    try:
+        token = redis_info.get_token(self, 'token')
+        token = token.decode(encoding='utf-8')
+        decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
+        user = User.objects.get(username=decoded_token['username'])
 
+        services.delete_object_from_s3(request, decoded_token['username'])  # calls the method from services to delete object from s3 with a key
+
+        res['message']="deleted successfully"
+        res['success']=True
+        messages.error(request, message=res['message'])
+        return redirect(reverse('getnotes'))
+    except (KeyboardInterrupt,MultiValueDictKeyError,Exception):
+        messages.error(request, message=res['message'])
+        return redirect(reverse('getnotes'))

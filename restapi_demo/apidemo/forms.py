@@ -82,12 +82,12 @@ class PhotoForm(forms.ModelForm):
         w = self.cleaned_data.get('width')  # width of cropping box
         h = self.cleaned_data.get('height')  # height of cropping box
 
-        print(x,y,w,h)
-        print(photo)
-        print('taken measures ')
+        # print(x,y,w,h)
+        # print(photo)
+        # print('taken measures ')
         image = Image.open(photo.file).convert('RGB')              # opens image file using Pillow library
-        print('take image object')
-        image.show()
+        #print('take image object')
+        #image.show()
         cropped_image = image.crop((x, y, w+x, h+y))        # crops image with x,y,w,h
         resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)  # resize cropped image.
         resized_image.save(photo.file.path)

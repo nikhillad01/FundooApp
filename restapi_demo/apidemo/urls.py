@@ -138,7 +138,7 @@ urlpatterns = [
     path('invite/', views.invite, name='invite'),
 
     #delete_from_s3
-    #path('delete_from_s3/', views.delete_from_s3, name='delete_from_s3'),
+    path('delete_from_s3/', views.delete_from_s3, name='delete_from_s3'),
 ]
 
 
