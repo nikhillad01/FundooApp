@@ -11,13 +11,16 @@
 from django.contrib.auth.decorators import user_passes_test
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
+from django.http import QueryDict
 from django.shortcuts import redirect
 from django.urls import reverse
 from self import self
 from .services import redis_info
 import jwt
 
+
 def custom_login_required(function=None,login_url =''):
+
     try:
         def is_login(request):
 
@@ -27,7 +30,8 @@ def custom_login_required(function=None,login_url =''):
                                        algorithms=['HS256'])  # decodes JWT token and gets the values Username etc
             user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
             # request.user = user
-            print('---Deco----',request)
+
+            print('--------Deco',request)
             return User.objects.filter(pk=user).exists()     # if user is present in DB.
         actual_decorator = user_passes_test(is_login)           # user_passes_test to check if some test passes or not
 
@@ -37,5 +41,7 @@ def custom_login_required(function=None,login_url =''):
             return redirect(reverse('login_v'))
             #return actual_decorator
 
-    except (ObjectDoesNotExist,Exception) as e:
+
+    except (ObjectDoesNotExist,AttributeError ,Exception) as e:
         print(e)
+        return redirect(reverse('login_v'))

@@ -1157,6 +1157,11 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
             messages.error(request, message=res['message'])
             return render(request, 'in.html', {})
 
+def get_token(key):
+    token = redis_info.get_token(self, key)  # gets the token from redis cache
+    token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+    decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
+    return decoded_token
 
 
 class View_reminder(View):
@@ -1171,7 +1176,7 @@ class View_reminder(View):
 
     @method_decorator(custom_login_required)    # method decorator is used for CBV
     def get(self, request):
-
+        #print('request-----------',request.META)
         """ Reads the notes by user and archived field"""
 
         res = {
@@ -1180,13 +1185,17 @@ class View_reminder(View):
             'success': False
         }
 
-
-
+        #print('user------------------',request.user)
+        a=custom_login_required
+        print('aaaaaaaaaaaaaaaaaaaaaa',a)
         try:
-                token = redis_info.get_token(self,'token')          # gets the token from redis cache
-                token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
-                decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])   # decodes JWT token and gets the values Username etc
-                user = User.objects.get(username=decoded_token['username']).pk          # gets the user from username
+                token = get_token(key='token')
+
+
+                # token = redis_info.get_token(self,'token')          # gets the token from redis cache
+                # token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+                # decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])   # decodes JWT token and gets the values Username etc
+                user = User.objects.get(username=token['username']).pk          # gets the user from username
 
 
                                                      # gets all the note and sort by created time

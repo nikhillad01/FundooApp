@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Fundoo</title>
+    <title>fundooNotes</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datetimepicker/4.17.37/css/bootstrap-datetimepicker.min.css" />
     <!--<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>-->
    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -117,7 +117,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                         </a>
                         <i class="fa fa-bars"></i>
                         </a>
-                        <a style="margin-right:1300px;color: #635f5f;font-size: 20px;font-family: Roboto;" href="#">Fundoo</a>
+                        <a style="margin-right:1300px;color: #635f5f;font-size: 20px;font-family: Roboto;" href="#">fundooNotes</a>
                         <button class="search-btn" aria-label="Search" role="button" id="searchicon">
                               <svg focusable="false" height="24px" viewBox="0 0 24 24" width="24px" xmlns="http://www.w3.org/2000/svg">
                                   <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"></path>
@@ -290,7 +290,7 @@ localStorage.setItem('token', ("{{token.data}}"));
     <!--Add Note-->
 
 
-   <div class="panel panel-danger" id="add_note">
+    <div class="panel panel-danger" id="add_note">
                             <div class="panel-body" style="font-family:Roboto;">
                                  <form method="post" action="{% url 'addnote' %}" id="addnoteform">
                                  {% csrf_token %}
@@ -451,14 +451,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
         <!--Prints all the Notes-->
-{% if listnote %}
-    <!--{% for i in listnote%}-->
-    <!--{% endfor %}-->.
-    {% for i in listnote %}
-    {{listnote}}
-    {% endfor %}
-    <!--{% include card.html %}-->
-    {% endif %}
+
 <div class="card-columns demo ">
 
     {% for i in notelist %}
@@ -696,8 +689,8 @@ localStorage.setItem('token', ("{{token.data}}"));
                     <input type="text" id="title" name="title" placeholder="Title"><br>
                     <input type="text" id="description" name="description" placeholder="description"><br>
                       <input type="submit" />
-                </div></form>
-
+                </div>
+          </form>
 
                 <!-- Modal footer -->
       </div>
@@ -742,20 +735,22 @@ localStorage.setItem('token', ("{{token.data}}"));
 </div>
 
 <center>
-<div class="card-columns" >
+<div class="card-columns"   style = "position:relative; right:300px; top:-300px; ">
 
     {% for i in not_list %}
 
     <!--<div >-->
-         <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:240px;width:210px;margin-bottom:100px;">
+         <article id="{{i.id}}" class="card" style="background-color:{{i.for_color}};height:240px;width:210px;">
              <div href="#" data-toggle="modal" data-target="#myModal" id="page-button i" style="background-color:{{i.color}};" >
              <div class="card-content" >
                   <h3 id="text_box1" data-model-name="text_box"  value={{i.title}}>{{i.title }}</h3>
                   <p id="text_area1" data-model-name="text_area" value={{i.description}}>{{i.description}}</p>
-                  <a href="{% url 'pin_unpin' i.id %}" style="position: absolute;top: 10px;right: -140px;" class="card-link"><span class="glyphicon glyphicon-pushpin" data-toggle="tooltip" data-placement="bottom" title="Pin note"></span></a>
-                 <!--suspected div   -->
+                 <div class="row">
+                  <a href="{% url 'pin_unpin' i.id %}" style="position: absolute;top: 10px;right: -65px;" class="card-link"><span class="glyphicon glyphicon-pushpin" data-toggle="tooltip" data-placement="bottom" title="Pin note"></span></a>
+                 </div>
 
 
+ <div class="row">
                      <div  class="dropdown" style="margin-top:100px;">
 
                         <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 5px;font-family:Roboto;margin-right:100px;" data-toggle="tooltip" data-placement="bottom" title="Reminder">
@@ -788,7 +783,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
                                <!--colabrator-->
-                                 <div role="button" class="btn  dropdown" style="margin: -20px;margin-top: -45px;margin-left: 48px;" aria-label="Collaborator" >
+                                 <div role="button" class="btn  dropdown" style="margin: -20px;margin-top: -25px;margin-left: 48px;" aria-label="Collaborator" >
                                      <button class="btn btn-default dropdown-toggle" type="button" id="" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true" style=" background-color: transparent;box-shadow: none;height: 3px;width: 25px;font-family:Roboto;" data-toggle="tooltip" data-placement="bottom" title="Collaborate">
                                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="Collaborator">
                                      <path d="M9 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0-6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm0 7c-2.67 0-8 1.34-8 4v3h16v-3c0-2.66-5.33-4-8-4zm6 5H3v-.99C3.2 16.29 6.3 15 9 15s5.8 1.29 6 2v1zm3-4v-3h-3V9h3V6h2v3h3v2h-3v3h-2z"/>
@@ -819,7 +814,7 @@ localStorage.setItem('token', ("{{token.data}}"));
 
 
                                   <!--color-->
-                               <div class="dropdown"  >
+                               <div class="dropdown"  style="margin-top:20px;">
                                        <button class="btn btn-default dropdown-toggle" type="button" id="color-btn" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
                                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24">
                                            <path d="M12 22C6.49 22 2 17.51 2 12S6.49 2 12 2s10 4.04 10 9c0 3.31-2.69 6-6 6h-1.77c-.28 0-.5.22-.5.5 0 .12.05.23.13.33.41.47.64 1.06.64 1.67A2.5 2.5 0 0 1 12 22zm0-18c-4.41 0-8 3.59-8 8s3.59 8 8 8c.28 0 .5-.22.5-.5a.54.54 0 0 0-.14-.35c-.41-.46-.63-1.05-.63-1.65a2.5 2.5 0 0 1 2.5-2.5H16c2.21 0 4-1.79 4-4 0-3.86-3.59-7-8-7z"/><circle cx="6.5" cy="11.5" r="1.5"/>
@@ -827,7 +822,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                                         </svg>
                                     </button>
                                        <!--colors in dropdown-->
-                                    <ul class="dropdown-menu" aria-labelledby="color-menu" style=" margin-left: 114px; margin-top: -22px;" >
+                                    <ul class="dropdown-menu" aria-labelledby="color-menu" style=" margin-left: 114px; margin-top: -90px;" >
                                         <form method="post" action="{% url 'change_color' i.id %}" style="height:22px;">
                                             <center>
                                             <select name="change_color" id="change_color" style="width:40px;" data-toggle="tooltip" data-placement="bottom" title="Change color">
@@ -859,7 +854,7 @@ localStorage.setItem('token', ("{{token.data}}"));
                                              <!--Archive-->
 
                                 <div >
-                                     <a href="{% url 'is_archived' i.id %}" role="button"   class="btn" style="margin-left:90px;margin-top:-150px;" data-toggle="tooltip" data-placement="bottom" title="Archive">
+                                     <a href="{% url 'is_archived' i.id %}" role="button"   class="btn" style="margin-left:100px;margin-bottom:60px;" data-toggle="tooltip" data-placement="bottom" title="Archive">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" id="archive">
                                                     <path d="M20.54 5.23l-1.39-1.68C18.88 3.21 18.47 3 18 3H6c-.47 0-.88.21-1.16.55L3.46 5.23C3.17 5.57 3 6.02 3 6.5V19c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6.5c0-.48-.17-.93-.46-1.27zM6.24 5h11.52l.83 1H5.42l.82-1zM5 19V8h14v11H5zm11-5.5l-4 4-4-4 1.41-1.41L11 13.67V10h2v3.67l1.59-1.59L16 13.5z"></path>
                                                     </svg></a>
@@ -917,7 +912,7 @@ localStorage.setItem('token', ("{{token.data}}"));
         <!--</div>-->
             </article>
     </div>
-
+</center>
     {% endfor %}
 
 </body>
@@ -1042,14 +1037,16 @@ function searchSuccess(data,testStatus,jqXHR)
 
     $('.demo').hide();
     $('#add_note').hide();
+    $('#add_note').hide();
     $("hr").hide();
-    $('.panel-danger').hide();
-    $('#title').hide();
-    $('#description').hide();
+    $('.panel-body').hide();
+    <!--$('#title').hide();-->
+    <!--$('#description').hide();-->
 
     $('#search-results').html(data);
 
 
+    <!--$('.wapper_forNote').hide();-->
      $('#pagination').hide();
     <!--var dataArray = data;-->
 
