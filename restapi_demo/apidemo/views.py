@@ -4,9 +4,9 @@
 * @version: 3.7
 * @since: 01-1-2019
 """
-import boto3
 from django.contrib import messages, auth
 from django.contrib.auth.decorators import login_required
+from django.contrib.sites.models import Site
 from django.utils.datastructures import MultiValueDictKeyError
 from django.utils.decorators import method_decorator
 from django.views import View
@@ -20,7 +20,7 @@ from rest_framework.views import APIView
 from django.http import HttpResponse
 from django.contrib.auth import login
 from self import self
-from .services import redis_info
+from .redis_services import redis_info
 from .models import Notes
 from .forms import SignupForm
 from django.utils.encoding import force_bytes, force_text
@@ -43,8 +43,10 @@ from .custom_decorators import custom_login_required
 from .models import Labels,Map_labels
 from django.db.models import Q
 import datetime
-import os
-from . import services
+from .cloud_services import  s3_services
+
+current_site = Site.objects.get_current()
+
 
 def index(request):         # this is homepage.1
     return render(request, 'index.html', {})
@@ -109,7 +111,7 @@ class LoginView(APIView):
                         return HttpResponse("Invalid login details given")
             else:
                 return render(request, 'dashboard.html', {})
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             print(e)
             return render(request, 'dashboard.html', {})
 
@@ -127,7 +129,7 @@ def Signup(request):
                 data = {                        # renders to html with variables
                     #"urlsafe_base64_encode" takes user id and generates the base64 code(uidb64).
                     'user': user,
-                    'domain':os.getenv("DOMAIN"),
+                    'domain': current_site.domain,
                     #'uid': urlsafe_base64_encode(force_bytes(user.pk)),    # encodes
                     'uid': urlsafe_base64_encode(force_bytes(user.pk)).decode(),  # coz django 2.0.0 to convert it to string
                     'token': account_activation_token.make_token(user),  # creates a token
@@ -143,7 +145,7 @@ def Signup(request):
             form = SignupForm()
         return render(request, 'signup.html', {'form': form})       # if  GET request
 
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 
@@ -168,7 +170,7 @@ def activate(request, uidb64, token):
 def login_v(request):               # renders to login page.
     try:
         return render(request, 'login.html')
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 
@@ -217,7 +219,7 @@ def demo_user_login(request):
                 res['message'] = 'Username or Password is not correct' #Invalid login details
                 messages.error(request, 'Invalid login details')
                 return render(request, 'login.html', context=res)
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
         return render(request, 'login.html', context=res)
 
@@ -233,13 +235,13 @@ def upload_profile(request):
                               # calls profile_pic upload method from S3 Upload file.
         messages.success(request, "Profile Pic updated")    # returns success message
         return render(request, 'profile.html')
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 def crop(request):
     try:
         return render(request,'photo_list.html')
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 
@@ -276,13 +278,13 @@ def photo_list(request):
         else:
             form = PhotoForm()                  # renders to page with form
             return render(request, 'photo_list.html', {'form': form})
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 def demo(request):
     try:
         return render(request,'demo.html',{})
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 
@@ -319,7 +321,7 @@ class AddNote(CreateAPIView):   # CreateAPIView used for create only operations.
 
                                             # else return error msg in response
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             print(e)
             return redirect(reverse('getnotes'))        # redirects to getnotes view
 
@@ -352,6 +354,13 @@ class getnotes(View):
                                                                                                           'description',
                                                                                                        'is_pinned','collaborate').order_by(
                                                                                                          '-created_time')  # shows note only added by specific user.
+
+            stores_id_note = []
+            for i in note_list:
+                #i=json.dumps(i)
+                stores_id_note.append(i['id'])
+            collaborators_to_note=Notes.collaborate.through.objects.filter(notes_id__in=stores_id_note).values()
+
 
             items=Notes.collaborate.through.objects.filter(user_id=request.user).values()
 
@@ -390,9 +399,9 @@ class getnotes(View):
 
 
 
-            return render(request, 'in.html', {'notelist': notelist,'labels':labels,'all_labels':all_labels,'all_map':all_map,'all_users':all_users})
+            return render(request, 'in.html', {'notelist': notelist,'labels':labels,'all_labels':all_labels,'all_map':all_map,'all_users':all_users,'collaborators_to_note': collaborators_to_note})
 
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             print(e)
 
 
@@ -415,31 +424,24 @@ class updatenote(UpdateAPIView):
                 'success': False
             }
 
-            if pk is None:                          # checks if primary key is passed
-                raise ValueError
 
-            if request.data is None:                # checks data is present in request
-                raise Exception('No data in request')
+            if pk and request.data:
+                note = Notes.objects.get(pk=pk)  # checks if primary key is available in DB and gets the data
 
-            try:
-                note = Notes.objects.get(pk=pk)     # checks if primary key is available in DB and gets the data
-            except Exception as e:
-                print(e)
-                return JsonResponse(res)
+                if serializer.is_valid():
+                    # if valid then save it
+                    serializer.save()
+                    # in response return data in json format
+                    res = {
+                        'message': 'Updated Successfully',
+                        'data': serializer.data,
+                        'success': True
+                    }
+                    return Response(res, status=status.HTTP_201_CREATED)
+                # else return error msg in response
+                return Response(res, status=status.HTTP_400_BAD_REQUEST)
 
-            if serializer.is_valid():
-                # if valid then save it
-                serializer.save()
-                # in response return data in json format
-                res = {
-                    'message': 'Updated Successfully',
-                    'data': serializer.data,
-                    'success': True
-                }
-                return Response(res, status=status.HTTP_201_CREATED)
-            # else return error msg in response
-            return Response(res, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             print(e)
 
 @custom_login_required
@@ -470,7 +472,7 @@ def deleteN(request,id):
                 print(e)
                 res['message'] = "Note not present for specific ID"
                 return JsonResponse(res)
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 @custom_login_required
@@ -491,7 +493,7 @@ def updateform(request,pk):
             note = Notes.objects.get(id=pk)  # gets the note with  PK
             return render(request, 'Notes/update.html', {"note": note})
 
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse(e)
 
 
@@ -541,11 +543,30 @@ def updateNotes(request,pk):
         note.save()             # saves the updated data
         return redirect(reverse('getnotes'))
 
-    except Exception as e:
-        print('exception')
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print(e)
 
 
+def get_all_labels(user):
+
+    """This method is used to get all the labels added by specific user """
+    try:
+        if user:
+            labels = Labels.objects.filter(user=user).order_by('-created_time')
+            return labels
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
+        print(e)
+
+
+def get_all_users(username):
+
+    """This method is used to get all users except current logged-In user """
+    try:
+        if username:
+            all_users = User.objects.filter(~Q(username=username)).values('username', 'id')
+            return all_users
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
+        print(e)
 
 
 @custom_login_required
@@ -574,7 +595,7 @@ def pin_unpin(request,pk):
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse("Note not found",e)
 
 
@@ -605,7 +626,7 @@ def trash(request,id):
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-    except Exception as e :
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse("No item found ",e)
 
 
@@ -638,9 +659,11 @@ class view_trash(View):
             res['success'] = True
             res['data'] = notelist
             print(notelist)
-            return render(request, 'in.html', {'notelist': note_list})
+            labels = get_all_labels(request.user)
+            all_users=get_all_users(request.user.username)
+            return render(request, 'in.html', {'notelist': note_list,'labels':labels,'all_users':all_users})
 
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             print(e)
 
 @custom_login_required
@@ -666,7 +689,7 @@ def delete_forever(request, pk):
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse(res)
 
 
@@ -706,7 +729,7 @@ def is_archived(request,pk):
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse(res)
 
 
@@ -747,10 +770,12 @@ class View_is_archived(View):
             res['message'] = "All Trash Notes"
             res['success'] = True
             res['data'] = notelist
-            print(note_list)
-            return render(request, 'in.html', {'notelist': note_list})
+            #print(note_list)
+            labels = get_all_labels(request.user)
+            all_users = get_all_users(request.user.username)
+            return render(request, 'in.html', {'notelist': note_list,'labels':labels,'all_users':all_users})
 
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             print(res)
 
 
@@ -774,7 +799,7 @@ def add_labels(request,pk):
         else:
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse(res,e)
 
 
@@ -807,7 +832,7 @@ def map_labels(request, *args ,**kwargs):
             messages.success(request, message='Label mapped')
             return redirect(reverse('getnotes'))
 
-    except Exception as e :
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse(res)
 
 
@@ -832,7 +857,7 @@ def delete_label(request,pk):
         else:
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         return HttpResponse(res)
 
 
@@ -879,14 +904,15 @@ def view_notes_for_each_label(request, pk):
             res['message'] = "All Trash Notes"
             res['success'] = True
             res['data'] = notelist
-
-            return render(request, 'in.html', {'notelist': newnotelist})
+            labels = get_all_labels(user)
+            all_users = get_all_users(decoded_token['username'])
+            return render(request, 'in.html', {'notelist': newnotelist,'labels':labels,'all_users':all_users})
 
         else:
             messages.success(request, message=res['message'])
             return redirect(reverse('getnotes'))
 
-    except Exception :
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
@@ -919,7 +945,7 @@ def copy_note(request,pk):
             messages.error('Invalid Details')
             return redirect(reverse('getnotes'))
 
-    except (KeyboardInterrupt, MultiValueDictKeyError, Exception) as e:              # if any exception occurs redirect to getnotes
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:              # if any exception occurs redirect to getnotes
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
@@ -954,7 +980,7 @@ def remove_labels(request,id,key,*args,**kwargs):
             messages.error(request,res['message'])
             return redirect(reverse('getnotes'))
 
-    except (KeyboardInterrupt,MultiValueDictKeyError,Exception):
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         messages.success(request, message=res['message'])
         return redirect(reverse('getnotes'))
 
@@ -1017,7 +1043,7 @@ def search(request):
                 print('no post')
                 return redirect(reverse('getnotes'))
 
-    except (KeyboardInterrupt,MultiValueDictKeyError,Exception) as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
          print("Exception---------------",e)
          res['message']="vacva"
          messages.error(request, message=res['message'])
@@ -1079,7 +1105,7 @@ def reminder(request):
             return JsonResponse(json_list,safe=False)
 
 
-    except (MultiValueDictKeyError,KeyboardInterrupt,ValueError,Exception):
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         messages.error(request, message=res['message'])
         return render(request,'in.html', {})
 
@@ -1137,7 +1163,7 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
 
                     data = {
                         'note_sender': logged_in_user,
-                        'domain': os.getenv("DOMAIN"),
+                        'domain':current_site.domain,
                     }
 
                     message = render_to_string('Notes/collaborate_notification.html', data)
@@ -1153,16 +1179,21 @@ class Update(UpdateAPIView):        # UpdateAPIView DRF view , used for update o
                 messages.error(request, message=res['message'])
                 return redirect(reverse('getnotes'))
 
-        except Exception:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             messages.error(request, message=res['message'])
             return render(request, 'in.html', {})
 
 def get_token(key):
-    token = redis_info.get_token(self, key)  # gets the token from redis cache
-    token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
-    decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
-    return decoded_token
+    try:
+        if key:
 
+            token = redis_info.get_token(self, key)  # gets the token from redis cache
+            token = token.decode(encoding='utf-8')  # decodes the token ( from Bytes to str )
+            decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
+            return decoded_token
+
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
+        print(e)
 
 class View_reminder(View):
 
@@ -1173,6 +1204,8 @@ class View_reminder(View):
         'data': {},
         'success': False
     }
+
+
 
     @method_decorator(custom_login_required)    # method decorator is used for CBV
     def get(self, request):
@@ -1185,9 +1218,7 @@ class View_reminder(View):
             'success': False
         }
 
-        #print('user------------------',request.user)
-        a=custom_login_required
-        print('aaaaaaaaaaaaaaaaaaaaaa',a)
+
         try:
                 token = get_token(key='token')
 
@@ -1210,11 +1241,12 @@ class View_reminder(View):
                 res['message'] = "All Trash Notes"
                 res['success'] = True
                 res['data'] = notelist
+                labels = get_all_labels(user)       # gets all labels created by specific user
+                all_users=get_all_users(token['username'])
+                return render(request, 'in.html', {'notelist': note_list,'labels':labels,'all_users':all_users})
 
-                return render(request, 'in.html', {'notelist': note_list})
 
-
-        except Exception as e:
+        except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
             messages.error(request,res)
             return redirect(reverse('getnotes'))
 
@@ -1245,8 +1277,8 @@ def change_color(request,pk):
             return redirect(reverse('getnotes'))
 
 
-    except Exception:
-        print(Exception)
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
+        print(e)
         messages.error(request, message=res['message'])
         return render(request, 'in.html', {})
 
@@ -1311,7 +1343,7 @@ def auto_delete_archive(request):
 
         return HttpResponse(note_list,trash_note_list)
 
-    except Exception as e:
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) as e:
         print("Exception",e)
 
 
@@ -1319,11 +1351,13 @@ def auto_delete_archive(request):
 @custom_login_required
 @require_POST
 def invite(request):
+
     res = {
         'message': 'Something Bad Happened',  # Response Data
         'data': {},
         'success': False
     }
+
     try:
         if request.POST['email']:
 
@@ -1337,7 +1371,7 @@ def invite(request):
 
             data = {
                 'user': user,
-                'domain': os.getenv("DOMAIN"),
+                'domain': current_site.domain,
             }
 
             message = render_to_string('invite.html', data)
@@ -1356,9 +1390,12 @@ def invite(request):
             messages.error(request, message=res['message'])
             return redirect(reverse('getnotes'))
 
-    except Exception :
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception):
         messages.error(request, message=res['message'])
         return redirect(reverse('getnotes'))
+
+
+
 
 @custom_login_required
 def delete_from_s3(request):
@@ -1373,12 +1410,12 @@ def delete_from_s3(request):
         decoded_token = jwt.decode(token, 'secret_key', algorithms=['HS256'])
         user = User.objects.get(username=decoded_token['username'])
 
-        services.delete_object_from_s3(request, decoded_token['username'])  # calls the method from services to delete object from s3 with a key
+        s3_services.delete_object_from_s3(request, decoded_token['username'])  # calls the method from services to delete object from s3 with a key
 
         res['message']="deleted successfully"
         res['success']=True
         messages.error(request, message=res['message'])
         return redirect(reverse('getnotes'))
-    except (KeyboardInterrupt,MultiValueDictKeyError,Exception):
+    except (KeyboardInterrupt, MultiValueDictKeyError, ValueError, Exception) :
         messages.error(request, message=res['message'])
         return redirect(reverse('getnotes'))

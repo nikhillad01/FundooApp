@@ -15,7 +15,7 @@ from django.http import QueryDict
 from django.shortcuts import redirect
 from django.urls import reverse
 from self import self
-from .services import redis_info
+from .redis_services import redis_info
 import jwt
 
 
@@ -31,7 +31,7 @@ def custom_login_required(function=None,login_url =''):
             user = User.objects.get(username=decoded_token['username']).pk  # gets the user from username
             # request.user = user
 
-            print('--------Deco',request)
+            #print('--------Deco',request)
             return User.objects.filter(pk=user).exists()     # if user is present in DB.
         actual_decorator = user_passes_test(is_login)           # user_passes_test to check if some test passes or not
 

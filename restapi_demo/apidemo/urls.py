@@ -8,7 +8,7 @@ urlpatterns = [
 
     #Admin Panel and Index.
 
-    path('admin/', admin.site.urls),
+    #path('admin/', admin.site.urls),
     path('', views.login_v,name='login_v'),
     #path('api/',include('urls.apidemo')),
     # URLS for REST API

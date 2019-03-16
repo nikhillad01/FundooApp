@@ -6,14 +6,16 @@
 * @since: 01-2-2019
 
 """
+from django.contrib import messages
 from django.contrib.auth import get_user_model
+from django.shortcuts import redirect
 from image import settings
 from requests import request
 from django.contrib.auth.forms import UserCreationForm,AuthenticationForm
 from PIL import Image
 from django import forms
 from .models import Photo
-from .services import upload_image
+from .cloud_services import s3_services
 
 User= get_user_model()
 
@@ -92,32 +94,32 @@ class PhotoForm(forms.ModelForm):
         resized_image = cropped_image.resize((200, 200), Image.ANTIALIAS)  # resize cropped image.
         resized_image.save(photo.file.path)
         path=photo.file.path                    # gets the image path.
-        upload_image(request, path, username)      # calls method to upload pic to S3.
+        s3_services.upload_image(request, path, username)      # calls method to upload pic to S3.
 
 
         return photo
 
-    # def clean_photo(self):
-    #     #image_file = self.cleaned_data.get('photo')
-    #     #super(PhotoForm, self)
-    #     # try:
-    #         image_file = super(PhotoForm, self)
-    #         if not image_file.name.endswith(".png"):
-    #             #raise forms.ValidationError("Only .jpeg image accepted")
-    #             messages.error(request, 'Please select valid file')
-    #             return redirect('photo_list')
-    #         return image_file
-
-        # except Exception as e:
-        #     print(e)
     def clean_photo(self):
-        photo = self.cleaned_data.get(['photo'])
-        print('cleaned ',photo)
-        if photo:
-            print('in if loop')
-            format = Image.open(photo.file).format
-            print('format ',format)
-            photo.file.seek(0)
-            if format in settings.VALID_IMAGE_FILETYPES:
-                return photo
-        raise forms.ValidationError('error')
+        #image_file = self.cleaned_data.get('photo')
+        #super(PhotoForm, self)
+        try:
+            image_file = super(PhotoForm, self)
+            if not image_file.name.endswith(".png",".jpeg",".jpg"):
+                #raise forms.ValidationError("Only .jpeg image accepted")
+                messages.error(request, 'Please select valid file')
+                return redirect('photo_list')
+            return image_file
+
+        except Exception as e:
+            print(e)
+    # def clean_photo(self):
+    #     photo = self.cleaned_data.get(['photo'])
+    #     print('cleaned ',photo)
+    #     if photo:
+    #         print('in if loop')
+    #         format = Image.open(photo.file).format
+    #         print('format ',format)
+    #         photo.file.seek(0)
+    #         if format in settings.VALID_IMAGE_FILETYPES:
+    #             return photo
+    #     raise forms.ValidationError('error')
